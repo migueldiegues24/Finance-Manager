@@ -1,7 +1,11 @@
 com/miguel/financemanager/repository/TransactionRepository.class
 com/miguel/financemanager/controller/CategoryController.class
 com/miguel/financemanager/repository/CategorizationRuleRepository.class
+com/miguel/financemanager/dto/RuleResponse.class
+com/miguel/financemanager/service/CategorizationRuleService.class
 com/miguel/financemanager/service/CategoryService.class
+com/miguel/financemanager/controller/CategorizationRuleController.class
 com/miguel/financemanager/dto/CategoryRequest.class
+com/miguel/financemanager/dto/RuleRequest.class
 com/miguel/financemanager/dto/CategoryResponse.class
 com/miguel/financemanager/service/CurrentUserService.class
