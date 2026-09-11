@@ -1,7 +1,10 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/FinancemanagerApplication.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/config/SecurityConfig.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/AuthController.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/CategoryController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/AuthResponse.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryRequest.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/LoginRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RefreshRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RegisterRequest.java
@@ -12,11 +15,15 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/Transaction.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/User.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/exception/GlobalExceptionHandler.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/repository/CategorizationRuleRepository.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/repository/CategoryRepository.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/repository/RefreshTokenRepository.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/repository/TransactionRepository.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/repository/UserRepository.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/security/CustomUserDetailsService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/security/JwtAuthenticationFilter.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/security/JwtService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/security/RefreshTokenService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/AuthService.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CategoryService.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CurrentUserService.java
