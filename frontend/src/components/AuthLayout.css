@@ -1,0 +1,137 @@
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+.auth-layout__panel {
+  background: var(--color-panel);
+  color: var(--color-bg);
+  padding: 4rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.auth-layout__mark {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+}
+
+.auth-layout__headline {
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  line-height: 1.15;
+  max-width: 12ch;
+  font-weight: 400;
+}
+
+.auth-layout__ledger {
+  font-size: 0.95rem;
+}
+
+.auth-layout__ledger-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-panel-line);
+  padding: 0.55rem 0;
+}
+
+.auth-layout__form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 360px;
+}
+
+.auth-form h2 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.auth-form__subtitle {
+  color: var(--color-ink-soft);
+  margin: 0 0 2.5rem;
+  font-size: 0.95rem;
+}
+
+.auth-field {
+  margin-bottom: 1.75rem;
+}
+
+.auth-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.auth-field input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--color-line);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 0.5rem 0;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.auth-field input:focus {
+  border-bottom-color: var(--color-ink);
+}
+
+.auth-form__error {
+  color: var(--color-expense);
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-form__submit {
+  width: 100%;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: none;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.auth-form__submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.auth-form__switch {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+.auth-form__switch a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 860px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-layout__panel {
+    padding: 2.5rem 1.75rem;
+  }
+
+  .auth-layout__headline {
+    font-size: 2rem;
+  }
+}

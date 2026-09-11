@@ -1,0 +1,47 @@
+:root {
+  --color-bg: #eeefea;
+  --color-panel: #1b2a4a;
+  --color-panel-line: rgba(238, 239, 234, 0.18);
+  --color-ink: #1b2a4a;
+  --color-ink-soft: rgba(27, 42, 74, 0.6);
+  --color-line: rgba(27, 42, 74, 0.15);
+  --color-expense: #8b2635;
+  --color-income: #3d6b4f;
+  --font-display: "Fraunces", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+}
+
+button {
+  font-family: var(--font-mono);
+}
+
+a {
+  color: inherit;
+}
