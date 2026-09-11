@@ -2,8 +2,11 @@ com/miguel/financemanager/repository/TransactionRepository.class
 com/miguel/financemanager/controller/CategoryController.class
 com/miguel/financemanager/repository/CategorizationRuleRepository.class
 com/miguel/financemanager/dto/ImportSummaryResponse.class
+com/miguel/financemanager/dto/DashboardSummaryResponse.class
 com/miguel/financemanager/repository/StatementImportRepository.class
 com/miguel/financemanager/dto/ParseImportResponse.class
+com/miguel/financemanager/service/DashboardService.class
+com/miguel/financemanager/controller/DashboardController.class
 com/miguel/financemanager/dto/RuleResponse.class
 com/miguel/financemanager/service/parsing/StatementParser.class
 com/miguel/financemanager/controller/CategorizationRuleController.class
@@ -20,4 +23,5 @@ com/miguel/financemanager/dto/ParsedTransactionResponse.class
 com/miguel/financemanager/service/parsing/SimpleCsvStatementParser.class
 com/miguel/financemanager/dto/RuleRequest.class
 com/miguel/financemanager/dto/CategoryResponse.class
+com/miguel/financemanager/dto/CategoryTotalResponse.class
 com/miguel/financemanager/service/CurrentUserService.class

@@ -3,12 +3,15 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/AuthController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/CategorizationRuleController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/CategoryController.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/DashboardController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/ImportController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/AuthResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryResponse.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryTotalResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/ConfirmImportRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/ConfirmTransactionRequest.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/DashboardSummaryResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/ImportSummaryResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/LoginRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/ParseImportResponse.java
@@ -38,6 +41,7 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CategorizationRuleService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CategoryService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CurrentUserService.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/DashboardService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/ImportService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/parsing/ParsedTransaction.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/parsing/SimpleCsvStatementParser.java
