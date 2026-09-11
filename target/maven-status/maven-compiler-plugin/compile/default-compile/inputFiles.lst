@@ -1,6 +1,7 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/FinancemanagerApplication.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/config/SecurityConfig.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/AuthController.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/CategorizationRuleController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/CategoryController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/AuthResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryRequest.java
@@ -8,6 +9,8 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/LoginRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RefreshRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RegisterRequest.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RuleRequest.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RuleResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/CategorizationRule.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/Category.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/RefreshToken.java
@@ -25,5 +28,6 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/security/JwtService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/security/RefreshTokenService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/AuthService.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CategorizationRuleService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CategoryService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CurrentUserService.java
