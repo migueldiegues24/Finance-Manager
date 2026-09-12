@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.408" tests="4" errors="0" skipped="0" failures="0" flakes="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest" time="2.57" tests="4" errors="0" skipped="0" failures="0" flakes="0">
   <properties>
     <property name="java.specification.version" value="23"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -65,14 +65,55 @@
     <property name="java.class.version" value="67.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[financemanager] "/>
   </properties>
-  <testcase name="deleteProtectedCategory_isRejected" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.089">
-    <system-out><![CDATA[2026-09-12T14:08:45.854+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategoryControllerIntegrationTest]: CategoryControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-12T14:08:45.857+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategoryControllerIntegrationTest
-2026-09-12T14:08:45.858+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategoryControllerIntegrationTest]: CategoryControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-12T14:08:45.860+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategoryControllerIntegrationTest
+  <testcase name="createRule_rejectsUnknownCategory" classname="com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest" time="0.642">
+    <system-out><![CDATA[2026-09-12T14:08:42.419+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest]: CategorizationRuleControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-12T14:08:42.459+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest
+2026-09-12T14:08:42.461+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest]: CategorizationRuleControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-12T14:08:42.465+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-09-12T14:08:42.528+01:00  INFO 153001 --- [financemanager] [           main] egorizationRuleControllerIntegrationTest : Starting CategorizationRuleControllerIntegrationTest using Java 23.0.2 with PID 153001 (started by miguel in /home/miguel/Desktop/Finance-Manager)
+2026-09-12T14:08:42.529+01:00  INFO 153001 --- [financemanager] [           main] egorizationRuleControllerIntegrationTest : The following 1 profile is active: "test"
+2026-09-12T14:08:42.796+01:00  INFO 153001 --- [financemanager] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-12T14:08:42.812+01:00  INFO 153001 --- [financemanager] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 13 ms. Found 6 JPA repository interfaces.
+2026-09-12T14:08:43.002+01:00  INFO 153001 --- [financemanager] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-12T14:08:43.031+01:00  INFO 153001 --- [financemanager] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-12T14:08:43.032+01:00  INFO 153001 --- [financemanager] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-09-12T14:08:43.217+01:00  INFO 153001 --- [financemanager] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+2026-09-12T14:08:43.218+01:00  INFO 153001 --- [financemanager] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-09-12T14:08:43.223+01:00  WARN 153001 --- [financemanager] [           main] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-09-12T14:08:43.230+01:00  INFO 153001 --- [financemanager] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:testdb]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: TESTDB/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-12T14:08:43.389+01:00  INFO 153001 --- [financemanager] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-12T14:08:43.464+01:00  INFO 153001 --- [financemanager] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-12T14:08:43.545+01:00  INFO 153001 --- [financemanager] [           main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-09-12T14:08:43.545+01:00  WARN 153001 --- [financemanager] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-09-12T14:08:43.634+01:00  WARN 153001 --- [financemanager] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-12T14:08:43.882+01:00  INFO 153001 --- [financemanager] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-12T14:08:43.883+01:00  INFO 153001 --- [financemanager] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-12T14:08:43.886+01:00  INFO 153001 --- [financemanager] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-09-12T14:08:43.916+01:00  INFO 153001 --- [financemanager] [           main] egorizationRuleControllerIntegrationTest : Started CategorizationRuleControllerIntegrationTest in 1.441 seconds (process running for 9.931)
 ]]></system-out>
   </testcase>
-  <testcase name="listCategories_returnsSevenSeededIncludingProtectedOne" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.082"/>
-  <testcase name="createRenameAndDeleteCategory_fullLifecycle" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.133"/>
-  <testcase name="createCategory_rejectsDuplicateName" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.089"/>
+  <testcase name="createRule_appendsWithIncrementingPriorityWhenOmitted" classname="com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest" time="0.172"/>
+  <testcase name="deleteRule_removesItFromList" classname="com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest" time="0.133"/>
+  <testcase name="listRules_startsEmpty" classname="com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest" time="0.106"/>
 </testsuite>

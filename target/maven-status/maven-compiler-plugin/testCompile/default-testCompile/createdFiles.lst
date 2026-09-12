@@ -1,8 +1,11 @@
 com/miguel/financemanager/controller/AuthControllerIntegrationTest.class
 com/miguel/financemanager/FinancemanagerApplicationTests.class
 com/miguel/financemanager/service/DashboardServiceTest.class
+com/miguel/financemanager/controller/DashboardControllerIntegrationTest.class
+com/miguel/financemanager/controller/CategorizationRuleControllerIntegrationTest.class
 com/miguel/financemanager/controller/CategoryControllerIntegrationTest.class
 com/miguel/financemanager/service/CategorizationRuleServiceTest.class
+com/miguel/financemanager/controller/ImportControllerIntegrationTest.class
 com/miguel/financemanager/service/CategoryServiceTest.class
 com/miguel/financemanager/service/ImportServiceTest.class
 com/miguel/financemanager/service/AuthServiceTest.class

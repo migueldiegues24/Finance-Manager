@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.408" tests="4" errors="0" skipped="0" failures="0" flakes="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.controller.ImportControllerIntegrationTest" time="0.395" tests="3" errors="0" skipped="0" failures="0" flakes="0">
   <properties>
     <property name="java.specification.version" value="23"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -65,14 +65,14 @@
     <property name="java.class.version" value="67.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[financemanager] "/>
   </properties>
-  <testcase name="deleteProtectedCategory_isRejected" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.089">
-    <system-out><![CDATA[2026-09-12T14:08:45.854+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategoryControllerIntegrationTest]: CategoryControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-12T14:08:45.857+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategoryControllerIntegrationTest
-2026-09-12T14:08:45.858+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategoryControllerIntegrationTest]: CategoryControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-12T14:08:45.860+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategoryControllerIntegrationTest
+  <testcase name="confirm_persistsTransactionsAndReturnsSummary" classname="com.miguel.financemanager.controller.ImportControllerIntegrationTest" time="0.165">
+    <system-out><![CDATA[2026-09-12T14:08:44.982+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.ImportControllerIntegrationTest]: ImportControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-12T14:08:44.986+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.ImportControllerIntegrationTest
+2026-09-12T14:08:44.987+01:00  INFO 153001 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.ImportControllerIntegrationTest]: ImportControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-12T14:08:44.991+01:00  INFO 153001 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.ImportControllerIntegrationTest
+2026-09-12T14:08:45.106+01:00  WARN 153001 --- [financemanager] [           main] o.h.v.i.m.a.CascadingMetaDataBuilder     : HV000271: Using `@Valid` on a container (java.util.List) is deprecated. You should apply the annotation on the type argument(s). Affected element: transactions
 ]]></system-out>
   </testcase>
-  <testcase name="listCategories_returnsSevenSeededIncludingProtectedOne" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.082"/>
-  <testcase name="createRenameAndDeleteCategory_fullLifecycle" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.133"/>
-  <testcase name="createCategory_rejectsDuplicateName" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.089"/>
+  <testcase name="parse_marksAlreadyImportedTransactionAsDuplicate" classname="com.miguel.financemanager.controller.ImportControllerIntegrationTest" time="0.124"/>
+  <testcase name="parse_returnsTransactionsWithoutPersisting" classname="com.miguel.financemanager.controller.ImportControllerIntegrationTest" time="0.084"/>
 </testsuite>
