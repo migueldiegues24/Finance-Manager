@@ -1,3 +1,5 @@
 com/miguel/financemanager/service/CategorizationRuleServiceTest.class
 com/miguel/financemanager/service/CategoryServiceTest.class
 com/miguel/financemanager/service/DashboardServiceTest.class
+com/miguel/financemanager/service/ImportServiceTest.class
+com/miguel/financemanager/service/AuthServiceTest.class

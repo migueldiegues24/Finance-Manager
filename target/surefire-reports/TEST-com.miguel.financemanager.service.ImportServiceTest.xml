@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.service.DashboardServiceTest" time="0.452" tests="3" errors="0" skipped="0" failures="0" flakes="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.service.ImportServiceTest" time="0.218" tests="6" errors="0" skipped="0" failures="0" flakes="0">
   <properties>
     <property name="java.specification.version" value="23"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -65,7 +65,10 @@
     <property name="java.class.version" value="67.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[financemanager] "/>
   </properties>
-  <testcase name="getMonthlySummary_usesFirstAndLastDayOfMonthAsBounds" classname="com.miguel.financemanager.service.DashboardServiceTest" time="0.331"/>
-  <testcase name="getMonthlySummary_convertsNegativeAmountsToPositiveTotalsAndSortsDescending" classname="com.miguel.financemanager.service.DashboardServiceTest" time="0.105"/>
-  <testcase name="getMonthlySummary_returnsZeroOverallTotalWhenNoExpenses" classname="com.miguel.financemanager.service.DashboardServiceTest" time="0.006"/>
+  <testcase name="parseStatement_wrapsIOExceptionAsIllegalArgument" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.182"/>
+  <testcase name="parseStatement_marksExistingHashAsDuplicate" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.007"/>
+  <testcase name="parseStatement_marksNewHashAsNotDuplicate" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.004"/>
+  <testcase name="confirmImport_throwsWhenNoFallbackCategoryExistsAtAll" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.006"/>
+  <testcase name="confirmImport_appliesFirstMatchingRuleByPriorityAndFallsBackToOutros" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.008"/>
+  <testcase name="confirmImport_fallsBackToSemCategoriaWhenOutrosDoesNotExist" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.005"/>
 </testsuite>
