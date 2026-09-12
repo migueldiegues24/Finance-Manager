@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.service.ImportServiceTest" time="0.2" tests="6" errors="0" skipped="0" failures="0" flakes="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.549" tests="4" errors="0" skipped="0" failures="0" flakes="0">
   <properties>
     <property name="java.specification.version" value="23"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -47,7 +47,7 @@
     <property name="localRepository" value="/home/miguel/.m2/repository"/>
     <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
     <property name="java.io.tmpdir" value="/tmp"/>
-    <property name="com.zaxxer.hikari.pool_number" value="1"/>
+    <property name="com.zaxxer.hikari.pool_number" value="2"/>
     <property name="java.version" value="23.0.2"/>
     <property name="user.dir" value="/home/miguel/Desktop/Finance-Manager"/>
     <property name="os.arch" value="amd64"/>
@@ -65,10 +65,14 @@
     <property name="java.class.version" value="67.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[financemanager] "/>
   </properties>
-  <testcase name="parseStatement_wrapsIOExceptionAsIllegalArgument" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.169"/>
-  <testcase name="parseStatement_marksExistingHashAsDuplicate" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.005"/>
-  <testcase name="parseStatement_marksNewHashAsNotDuplicate" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.003"/>
-  <testcase name="confirmImport_throwsWhenNoFallbackCategoryExistsAtAll" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.005"/>
-  <testcase name="confirmImport_appliesFirstMatchingRuleByPriorityAndFallsBackToOutros" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.007"/>
-  <testcase name="confirmImport_fallsBackToSemCategoriaWhenOutrosDoesNotExist" classname="com.miguel.financemanager.service.ImportServiceTest" time="0.005"/>
+  <testcase name="deleteProtectedCategory_isRejected" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.133">
+    <system-out><![CDATA[2026-09-12T13:29:26.963+01:00  INFO 138592 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategoryControllerIntegrationTest]: CategoryControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-12T13:29:26.967+01:00  INFO 138592 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategoryControllerIntegrationTest
+2026-09-12T13:29:26.969+01:00  INFO 138592 --- [financemanager] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.miguel.financemanager.controller.CategoryControllerIntegrationTest]: CategoryControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-12T13:29:26.973+01:00  INFO 138592 --- [financemanager] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.miguel.financemanager.FinancemanagerApplication for test class com.miguel.financemanager.controller.CategoryControllerIntegrationTest
+]]></system-out>
+  </testcase>
+  <testcase name="listCategories_returnsSevenSeededIncludingProtectedOne" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.104"/>
+  <testcase name="createRenameAndDeleteCategory_fullLifecycle" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.185"/>
+  <testcase name="createCategory_rejectsDuplicateName" classname="com.miguel.financemanager.controller.CategoryControllerIntegrationTest" time="0.104"/>
 </testsuite>
