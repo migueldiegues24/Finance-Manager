@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.miguel.financemanager.FinancemanagerApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.110 s -- in com.miguel.financemanager.FinancemanagerApplicationTests
