@@ -1,0 +1,107 @@
+.dashboard {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+.dashboard__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+}
+
+.dashboard__mark {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--color-ink);
+}
+
+.dashboard__logout {
+  background: transparent;
+  border: 1px solid var(--color-line);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--color-ink);
+}
+
+.dashboard__month-nav {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.dashboard__month-nav h1 {
+  font-size: 2.25rem;
+  font-weight: 400;
+  min-width: 260px;
+  text-align: center;
+}
+
+.dashboard__month-nav button {
+  background: none;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-ink-soft);
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+}
+
+.dashboard__month-nav button:hover {
+  color: var(--color-ink);
+}
+
+.dashboard__status {
+  color: var(--color-ink-soft);
+  font-size: 0.95rem;
+}
+
+.dashboard__status--error {
+  color: var(--color-expense);
+}
+
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger thead th {
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--color-ink);
+}
+
+.ledger thead th:last-child,
+.ledger td:last-child {
+  text-align: right;
+}
+
+.ledger tbody td {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-line);
+  font-size: 1rem;
+}
+
+.ledger__amount {
+  font-family: var(--font-mono);
+  color: var(--color-expense);
+}
+
+.ledger tfoot td {
+  padding-top: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-top: 3px double var(--color-ink);
+}
+
+.ledger tfoot .ledger__amount {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
