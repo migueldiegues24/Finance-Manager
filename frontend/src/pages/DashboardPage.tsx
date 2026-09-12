@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
-import { useAuth } from "../context/AuthContext";
+import AppLayout from "../components/AppLayout";
+import { formatCurrency } from "../utils/format";
 import "./DashboardPage.css";
 
 interface CategoryTotal {
@@ -33,15 +34,7 @@ function formatMonthLabel(month: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-PT", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
 export default function DashboardPage() {
-  const { logout } = useAuth();
   const [month, setMonth] = useState(currentMonth());
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,14 +64,7 @@ export default function DashboardPage() {
   }, [month]);
 
   return (
-    <div className="dashboard">
-      <header className="dashboard__header">
-        <span className="dashboard__mark">Finance Manager</span>
-        <button className="dashboard__logout" onClick={logout}>
-          Sair
-        </button>
-      </header>
-
+    <AppLayout>
       <div className="dashboard__month-nav">
         <button onClick={() => setMonth((m) => shiftMonth(m, -1))} aria-label="Mês anterior">
           ‹
@@ -120,6 +106,6 @@ export default function DashboardPage() {
           </table>
         )
       )}
-    </div>
+    </AppLayout>
   );
 }

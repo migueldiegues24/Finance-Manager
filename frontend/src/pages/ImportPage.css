@@ -1,0 +1,65 @@
+.import-page__title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+.import-page__subtitle {
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  margin: 0 0 2rem;
+}
+
+.import-page__upload {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.import-page__file-label {
+  border: 1px solid var(--color-line);
+  padding: 0.65rem 1.1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.import-page__upload button {
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: none;
+  padding: 0.65rem 1.3rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.import-page__upload button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.import-page__result {
+  color: var(--color-income);
+  margin-bottom: 2rem;
+}
+
+.import-page__duplicate-tag {
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+}
+
+.import-page__confirm {
+  margin-top: 1.5rem;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.import-page__confirm:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

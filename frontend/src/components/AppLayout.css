@@ -1,0 +1,50 @@
+.app-shell__header {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--color-line);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.app-shell__mark {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--color-ink);
+}
+
+.app-shell__nav {
+  display: flex;
+  gap: 1.75rem;
+  flex: 1;
+}
+
+.app-shell__nav a {
+  text-decoration: none;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid transparent;
+}
+
+.app-shell__nav a.active,
+.app-shell__nav a:hover {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
+
+.app-shell__logout {
+  background: transparent;
+  border: 1px solid var(--color-line);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--color-ink);
+}
+
+.app-shell__main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
