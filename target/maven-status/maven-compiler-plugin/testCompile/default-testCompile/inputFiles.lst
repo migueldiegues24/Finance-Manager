@@ -1,1 +1,4 @@
 /home/miguel/Desktop/Finance-Manager/src/test/java/com/miguel/financemanager/FinancemanagerApplicationTests.java
+/home/miguel/Desktop/Finance-Manager/src/test/java/com/miguel/financemanager/service/CategorizationRuleServiceTest.java
+/home/miguel/Desktop/Finance-Manager/src/test/java/com/miguel/financemanager/service/CategoryServiceTest.java
+/home/miguel/Desktop/Finance-Manager/src/test/java/com/miguel/financemanager/service/DashboardServiceTest.java
