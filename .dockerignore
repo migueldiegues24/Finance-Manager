@@ -1,0 +1,9 @@
+target/
+frontend/
+.git/
+.gitignore
+*.md
+.idea/
+*.iml
+extrato_teste.csv
+resposta.json
