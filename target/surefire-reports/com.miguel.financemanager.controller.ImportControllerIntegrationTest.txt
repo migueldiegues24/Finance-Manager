@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.miguel.financemanager.controller.ImportControllerIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.395 s -- in com.miguel.financemanager.controller.ImportControllerIntegrationTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.416 s -- in com.miguel.financemanager.controller.ImportControllerIntegrationTest
