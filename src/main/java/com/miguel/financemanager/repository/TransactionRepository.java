@@ -15,6 +15,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     boolean existsByUserAndHash(User user, String hash);
 
+    List<Transaction> findByUserAndTransactionDateGreaterThanEqualAndTransactionDateLessThanOrderByTransactionDateDesc(
+            User user, LocalDate start, LocalDate end);
+
     // Cada linha: [categoryId (Long), categoryName (String), total (BigDecimal, negativo)]
     // Só soma despesas (amount < 0); "start" incluído, "end" excluído (primeiro dia do mês seguinte).
     @Query("SELECT t.category.id, t.category.name, SUM(t.amount) FROM Transaction t " +

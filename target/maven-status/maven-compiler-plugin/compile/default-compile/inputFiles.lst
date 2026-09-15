@@ -5,6 +5,7 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/CategoryController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/DashboardController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/ImportController.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/controller/TransactionController.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/AuthResponse.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/CategoryResponse.java
@@ -20,6 +21,8 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RegisterRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RuleRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/RuleResponse.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/TransactionResponse.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/dto/UpdateTransactionCategoryRequest.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/CategorizationRule.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/Category.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/entity/RefreshToken.java
@@ -43,6 +46,7 @@
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/CurrentUserService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/DashboardService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/ImportService.java
+/home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/TransactionService.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/parsing/ParsedTransaction.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/parsing/SimpleCsvStatementParser.java
 /home/miguel/Desktop/Finance-Manager/src/main/java/com/miguel/financemanager/service/parsing/StatementParser.java

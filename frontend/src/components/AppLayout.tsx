@@ -14,6 +14,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <NavLink to="/dashboard" className={({ isActive }) => (isActive ? "active" : undefined)}>
             Dashboard
           </NavLink>
+          <NavLink to="/transactions" className={({ isActive }) => (isActive ? "active" : undefined)}>
+            Transações
+          </NavLink>
           <NavLink to="/import" className={({ isActive }) => (isActive ? "active" : undefined)}>
             Importar
           </NavLink>

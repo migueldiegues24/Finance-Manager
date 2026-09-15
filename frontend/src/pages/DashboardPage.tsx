@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
 import { formatCurrency } from "../utils/format";
+import { currentMonth, shiftMonth, formatMonthLabel } from "../utils/date";
 import "./DashboardPage.css";
 
 interface CategoryTotal {
@@ -14,24 +15,6 @@ interface DashboardSummary {
   month: string;
   totals: CategoryTotal[];
   overallTotal: number;
-}
-
-function currentMonth(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function shiftMonth(month: string, delta: number): string {
-  const [year, m] = month.split("-").map(Number);
-  const date = new Date(year, m - 1 + delta, 1);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function formatMonthLabel(month: string): string {
-  const [year, m] = month.split("-").map(Number);
-  const date = new Date(year, m - 1, 1);
-  const label = new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric" }).format(date);
-  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export default function DashboardPage() {
