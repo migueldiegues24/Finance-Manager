@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.358 s -- in com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.213 s -- in com.miguel.financemanager.controller.CategorizationRuleControllerIntegrationTest

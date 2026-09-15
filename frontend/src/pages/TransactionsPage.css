@@ -1,0 +1,24 @@
+.transactions-table td {
+  vertical-align: middle;
+}
+
+.transactions-table select {
+  border: none;
+  border-bottom: 1px solid var(--color-line);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  padding: 0.3rem 0;
+  color: var(--color-ink);
+  outline: none;
+  cursor: pointer;
+}
+
+.transactions-table select:focus {
+  border-bottom-color: var(--color-ink);
+}
+
+.transactions-table select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

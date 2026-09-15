@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ImportPage from "./pages/ImportPage";
 import CategoriesPage from "./pages/CategoriesPage";
+import TransactionsPage from "./pages/TransactionsPage";
 
 export default function App() {
   return (
@@ -19,6 +20,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute>
+                <TransactionsPage />
               </ProtectedRoute>
             }
           />
