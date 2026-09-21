@@ -4,6 +4,7 @@ import com.miguel.financemanager.dto.ConfirmImportRequest;
 import com.miguel.financemanager.dto.ImportSummaryResponse;
 import com.miguel.financemanager.dto.ParseImportResponse;
 import com.miguel.financemanager.service.ImportService;
+import com.miguel.financemanager.service.parsing.Bank;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +19,9 @@ public class ImportController {
     private final ImportService importService;
 
     @PostMapping(value = "/parse", consumes = "multipart/form-data")
-    public ResponseEntity<ParseImportResponse> parse(@RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(importService.parseStatement(file));
+    public ResponseEntity<ParseImportResponse> parse(@RequestParam("file") MultipartFile file,
+                                                     @RequestParam(value = "bank", required = false) String bank) {
+        return ResponseEntity.ok(importService.parseStatement(file, Bank.fromParam(bank)));
     }
 
     @PostMapping("/confirm")
