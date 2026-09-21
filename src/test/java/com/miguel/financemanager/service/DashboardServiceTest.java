@@ -71,6 +71,32 @@ class DashboardServiceTest {
     }
 
     @Test
+    void getMonthlySummary_computesIncomeExpensesAndNet() {
+        when(transactionRepository.sumExpensesByCategory(eq(user), any(), any())).thenReturn(List.of());
+        when(transactionRepository.sumIncome(eq(user), any(), any())).thenReturn(new BigDecimal("1200.00"));
+        when(transactionRepository.sumExpenses(eq(user), any(), any())).thenReturn(new BigDecimal("-1508.50"));
+
+        DashboardSummaryResponse response = dashboardService.getMonthlySummary(YearMonth.of(2026, 9));
+
+        assertThat(response.getTotalIncome()).isEqualByComparingTo("1200.00");
+        assertThat(response.getTotalExpenses()).isEqualByComparingTo("1508.50");
+        assertThat(response.getNet()).isEqualByComparingTo("-308.50");
+    }
+
+    @Test
+    void getMonthlySummary_treatsMissingSumsAsZero() {
+        when(transactionRepository.sumExpensesByCategory(eq(user), any(), any())).thenReturn(List.of());
+        when(transactionRepository.sumIncome(eq(user), any(), any())).thenReturn(null);
+        when(transactionRepository.sumExpenses(eq(user), any(), any())).thenReturn(null);
+
+        DashboardSummaryResponse response = dashboardService.getMonthlySummary(YearMonth.of(2026, 9));
+
+        assertThat(response.getTotalIncome()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.getTotalExpenses()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.getNet()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
     void getMonthsWithTransactions_formatsAndSortsAscending() {
         List<Object[]> rows = List.of(
                 new Object[]{2026, 9},
