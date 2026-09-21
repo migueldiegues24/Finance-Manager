@@ -168,8 +168,7 @@ export default function DashboardPage() {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td>Total das despesas</td>
-                    <td />
+                    <td colSpan={2}>Total</td>
                     <td className="ledger__num ledger__amount">−{formatCurrency(summary.overallTotal)}</td>
                   </tr>
                 </tfoot>
