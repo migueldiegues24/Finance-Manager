@@ -214,6 +214,24 @@
   color: var(--color-ink-pressed);
 }
 
+/* Ação destrutiva principal (ex.: confirmar "Apagar"). Texto claro sobre
+   o vermelho da despesa: 7,49:1. */
+.btn--destructive {
+  background: var(--color-expense);
+  border-color: var(--color-expense);
+  color: var(--color-bg);
+}
+
+.btn--destructive:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-expense) 88%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-expense) 88%, var(--color-bg));
+}
+
+.btn--destructive:active:not(:disabled) {
+  background: color-mix(in oklab, var(--color-expense) 82%, black);
+  border-color: color-mix(in oklab, var(--color-expense) 82%, black);
+}
+
 .btn--danger:hover:not(:disabled),
 .btn--danger:active:not(:disabled) {
   color: var(--color-expense);
