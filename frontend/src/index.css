@@ -11,6 +11,26 @@
   --color-expense: #8b2635;
   --color-income: #3d6b4f;
 
+  /* Acentos (usar com moderação). Contraste como texto, pior caso sobre
+     --color-row-hover:
+       accent    #1F5E6B  5,37:1  (texto claro sobre ele: 6,33:1)
+       attention #7F530C  4,90:1  */
+  --color-accent: #1f5e6b;
+  --color-attention: #7f530c;
+
+  /* Cores das categorias (atribuídas por id em utils/categoryColor.ts).
+     Todas >= 4,5:1 no fundo, em --color-row-alt, em --color-row-hover e na
+     respetiva tinta a 10%. Evitam o vermelho da despesa e o verde da
+     receita. "Sem Categoria" não usa esta paleta (usa --color-attention). */
+  --color-cat-1: #2f5d8a; /* cobalto 5,05 */
+  --color-cat-2: #1f6b64; /* verde-azulado 4,61 */
+  --color-cat-3: #6b4e9b; /* violeta 4,83 */
+  --color-cat-4: #8a4619; /* terracota 5,19 */
+  --color-cat-5: #63591a; /* azeitona 5,18 */
+  --color-cat-6: #8e3b6b; /* magenta 5,16 */
+  --color-cat-7: #535a70; /* ardósia 5,03 */
+  --color-cat-8: #7b5b3a; /* sépia 4,53 */
+
   /* Texto secundário. Com alpha, o contraste acompanha a superfície:
      72% dá 5,38:1 no fundo, 5,13:1 em --color-row-alt e 4,92:1 em
      --color-row-hover. Abaixo de ~68% falha os 4,5:1. */
@@ -22,6 +42,8 @@
   --color-row-hover: color-mix(in srgb, var(--color-ink) 9%, var(--color-bg));
   --color-expense-tint: color-mix(in srgb, var(--color-expense) 8%, var(--color-bg));
   --color-income-tint: color-mix(in srgb, var(--color-income) 8%, var(--color-bg));
+  --color-accent-tint: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg));
+  --color-attention-tint: color-mix(in srgb, var(--color-attention) 10%, var(--color-bg));
 
   /* Linhas. --color-control-line (55%) é o contorno de campos e botões
      secundários: 3,3:1, acima dos 3:1 pedidos para elementos não textuais. */
@@ -33,6 +55,8 @@
   /* Tinta em estados de botões principais. */
   --color-ink-hover: color-mix(in srgb, var(--color-ink) 88%, var(--color-bg));
   --color-ink-pressed: color-mix(in oklab, var(--color-ink) 82%, black);
+  --color-accent-hover: color-mix(in srgb, var(--color-accent) 88%, var(--color-bg)); /* texto claro 4,86:1 */
+  --color-accent-pressed: color-mix(in oklab, var(--color-accent) 82%, black);
   --color-focus: var(--color-ink);
 
   /* Cabeçalho da app. Para testar a faixa em tinta:

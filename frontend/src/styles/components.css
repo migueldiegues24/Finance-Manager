@@ -101,8 +101,8 @@
 }
 
 .btn--primary {
-  background: var(--color-ink);
-  border-color: var(--color-ink);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: var(--color-bg);
 }
 
@@ -139,13 +139,13 @@
 /* Estados: só mudam cor, fundo, contorno e sombra, nunca tamanhos, por
    isso não há saltos de layout. */
 .btn--primary:hover:not(:disabled) {
-  background: var(--color-ink-hover);
-  border-color: var(--color-ink-hover);
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
 .btn--primary:active:not(:disabled) {
-  background: var(--color-ink-pressed);
-  border-color: var(--color-ink-pressed);
+  background: var(--color-accent-pressed);
+  border-color: var(--color-accent-pressed);
 }
 
 .btn--ghost:hover:not(:disabled) {
@@ -244,6 +244,81 @@ select.field {
   border-left-color: var(--color-income);
   background: var(--color-income-tint);
   color: var(--color-ink);
+}
+
+.status--attention {
+  border-left-color: var(--color-attention);
+  background: var(--color-attention-tint);
+  color: var(--color-ink);
+}
+
+/* ---------- Etiquetas e pontos de cor ---------- */
+
+/* A cor vem de --tag-color / --category-color (ver utils/categoryColor.ts).
+   Nunca é o único sinal: a etiqueta tem sempre texto. */
+.dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--category-color, currentColor);
+}
+
+.tag {
+  --tag-color: var(--category-color, var(--color-ink));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--tag-color) 40%, transparent);
+  background: color-mix(in srgb, var(--tag-color) 10%, var(--color-bg));
+  color: var(--tag-color);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.tag--attention {
+  --tag-color: var(--color-attention);
+}
+
+.label-with-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* ---------- Estado vazio ---------- */
+
+.empty-state {
+  padding: var(--space-7) var(--space-6);
+  border: 1px dashed var(--color-line-strong);
+  text-align: center;
+}
+
+.empty-state__title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-bottom: var(--space-2);
+}
+
+.empty-state__text {
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  max-width: 44ch;
+  margin: 0 auto var(--space-5);
+}
+
+.empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
 }
 
 /* ---------- Utilitários ---------- */
