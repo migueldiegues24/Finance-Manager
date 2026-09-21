@@ -10,6 +10,17 @@
   `RuleDialog` passa a servir também para editar, como o `CategoryDialog`.
   _Registado a 2026-09-21, na feat/ui-polish._
 
+## Frontend e backend
+
+- **Categoria prevista na revisão da importação.** Hoje a categoria só é
+  atribuída no confirm (regras aplicadas no `ImportWriter`), por isso a
+  página de revisão não mostra categorias nem as suas cores. Para a mostrar
+  antes de confirmar, o parse teria de aplicar as regras e devolver a
+  categoria prevista (id, nome e cor) por movimento, e a revisão ganharia
+  uma coluna com o ponto/etiqueta de cor ao lado do nome. Avaliar também se
+  o utilizador pode trocar a categoria antes de confirmar.
+  _Registado a 2026-09-21, na feat/category-colors._
+
 ## Autenticação (frontend e backend)
 
 - **Renovação concorrente da sessão perde a sessão.** O refresh token roda a
