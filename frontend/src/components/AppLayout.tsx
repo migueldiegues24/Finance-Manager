@@ -19,7 +19,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <header className="app-shell__header">
-        <div className="app-shell__inner app-shell__bar">
+        <div className="app-shell__bar">
           <div className="app-shell__primary">
             <Link to="/dashboard" className="app-shell__mark">
               Finance Manager
