@@ -27,14 +27,6 @@
   text-overflow: ellipsis;
 }
 
-.import-page__result {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
 .import-page__toolbar {
   display: flex;
   flex-wrap: wrap;

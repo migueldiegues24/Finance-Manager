@@ -1,3 +1,5 @@
+/* Partilhado pelas páginas de Categorias e de Regras. */
+
 .categories-page__actions {
   white-space: nowrap;
 }
@@ -6,34 +8,4 @@
   color: var(--color-ink-soft);
   font-size: 0.8rem;
   font-style: italic;
-}
-
-/* O campo de edição ocupa o lugar do nome sem mudar a altura da linha. */
-.categories-page__inline-input {
-  min-height: 0;
-  padding-block: 0;
-  font-size: 1rem;
-}
-
-.categories-page__form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
-
-.categories-page__form .field {
-  flex: 1 1 12rem;
-  width: auto;
-}
-
-@media (max-width: 640px) {
-  .categories-page__form .btn {
-    flex: 1 1 100%;
-  }
-}
-
-.categories-page__empty {
-  margin-bottom: var(--space-2);
 }

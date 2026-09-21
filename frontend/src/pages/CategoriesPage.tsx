@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
+import CategoryDialog from "../components/CategoryDialog";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { categoryStyle } from "../utils/categoryColor";
 import "./CategoriesPage.css";
+import Notice from "../components/Notice";
+import { AppError, apiFailure, toNotice, type NoticeContent } from "../api/errors";
 
 interface Category {
   id: number;
@@ -10,177 +14,72 @@ interface Category {
   defaultCategory: boolean;
 }
 
-interface Rule {
-  id: number;
-  keyword: string;
-  categoryId: number;
-  categoryName: string;
-  priority: number;
+async function fetchCategories(): Promise<Category[]> {
+  const res = await apiFetch("/categories");
+  if (!res.ok) throw new AppError("Não foi possível carregar as categorias.");
+  return res.json();
+}
+
+// Diálogo de criar/editar; key muda a cada abertura para recomeçar o formulário.
+interface DialogState {
+  key: number;
+  category: Category | null;
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[] | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
+  const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [toDelete, setToDelete] = useState<Category | null>(null);
+  const newButtonRef = useRef<HTMLButtonElement>(null);
 
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [creatingCategory, setCreatingCategory] = useState(false);
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState("");
-
-  const [newRuleKeyword, setNewRuleKeyword] = useState("");
-  const keywordInputRef = useRef<HTMLInputElement>(null);
-  const [newRuleCategoryId, setNewRuleCategoryId] = useState("");
-  const [creatingRule, setCreatingRule] = useState(false);
-
-  async function loadAll() {
-    setError(null);
-    try {
-      const [catRes, ruleRes] = await Promise.all([apiFetch("/categories"), apiFetch("/rules")]);
-      if (!catRes.ok || !ruleRes.ok) throw new Error("Não foi possível carregar categorias e regras");
-      setCategories(await catRes.json());
-      setRules(await ruleRes.json());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadAll();
+  // Recarrega depois de gravar ou apagar; os diálogos esperam por isto
+  // antes de fechar, para a lista já estar atualizada.
+  const reload = useCallback(async () => {
+    setCategories(await fetchCategories());
   }, []);
 
-  async function handleCreateCategory(event: FormEvent) {
-    event.preventDefault();
-    if (!newCategoryName.trim()) return;
-
-    setCreatingCategory(true);
-    setError(null);
-    try {
-      const res = await apiFetch("/categories", {
-        method: "POST",
-        body: JSON.stringify({ name: newCategoryName.trim() }),
+  useEffect(() => {
+    let cancelled = false;
+    fetchCategories()
+      .then((data) => {
+        if (!cancelled) setCategories(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(toNotice(err));
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível criar a categoria");
-      }
-      setNewCategoryName("");
-      await loadAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
-    } finally {
-      setCreatingCategory(false);
-    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function openDialog(category: Category | null) {
+    setDialog({ key: Date.now(), category });
   }
 
-  function startEditing(category: Category) {
-    setEditingId(category.id);
-    setEditingName(category.name);
-  }
-
-  async function saveEditing(id: number) {
-    if (!editingName.trim()) return;
-
-    setError(null);
-    try {
-      const res = await apiFetch(`/categories/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ name: editingName.trim() }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível editar a categoria");
-      }
-      setEditingId(null);
-      await loadAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
-    }
-  }
-
-  async function deleteCategory(id: number) {
-    const confirmed = window.confirm(
-      'Apagar esta categoria? As transações associadas passam para "Sem Categoria".',
-    );
-    if (!confirmed) return;
-
-    setError(null);
-    try {
-      const res = await apiFetch(`/categories/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível apagar a categoria");
-      }
-      await loadAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
-    }
-  }
-
-  async function handleCreateRule(event: FormEvent) {
-    event.preventDefault();
-    if (!newRuleKeyword.trim() || !newRuleCategoryId) return;
-
-    setCreatingRule(true);
-    setError(null);
-    try {
-      const res = await apiFetch("/rules", {
-        method: "POST",
-        body: JSON.stringify({
-          keyword: newRuleKeyword.trim(),
-          categoryId: Number(newRuleCategoryId),
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível criar a regra");
-      }
-      setNewRuleKeyword("");
-      setNewRuleCategoryId("");
-      await loadAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
-    } finally {
-      setCreatingRule(false);
-    }
-  }
-
-  async function deleteRule(id: number) {
-    setError(null);
-    try {
-      const res = await apiFetch(`/rules/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Não foi possível apagar a regra");
-      await loadAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
-    }
-  }
-
-  if (loading) {
-    return (
-      <AppLayout>
-        <p className="status" role="status">A carregar…</p>
-      </AppLayout>
-    );
+  async function deleteCategory(category: Category) {
+    const res = await apiFetch(`/categories/${category.id}`, { method: "DELETE" });
+    if (!res.ok) throw await apiFailure(res, "Não foi possível apagar a categoria.");
+    await reload();
   }
 
   return (
     <AppLayout>
-      <header className="page-header">
-        <p className="page-header__eyebrow">Configuração</p>
-        <h1 className="page-header__title">Categorias e regras</h1>
+      <header className="page-header page-header--with-action">
+        <div>
+          <p className="page-header__eyebrow">Configuração</p>
+          <h1 className="page-header__title">Categorias</h1>
+          <p className="page-header__subtitle">A categoria protegida não pode ser alterada.</p>
+        </div>
+        <button ref={newButtonRef} type="button" className="btn btn--primary" onClick={() => openDialog(null)}>
+          Nova categoria
+        </button>
       </header>
 
-      {error && <p className="status status--error" role="alert">{error}</p>}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} />}
+      {categories === null && !error && <Notice title="A carregar…" />}
 
-      <section aria-labelledby="categories-title">
-        <h2 className="section__title" id="categories-title">Categorias</h2>
-        <p className="section__subtitle">As categorias protegidas não podem ser renomeadas nem apagadas.</p>
-
+      {categories && (
         <table className="ledger">
           <thead>
             <tr>
@@ -194,15 +93,7 @@ export default function CategoriesPage() {
             {categories.map((category) => (
               <tr key={category.id}>
                 <td>
-                  {editingId === category.id ? (
-                    <input
-                      className="field categories-page__inline-input"
-                      aria-label="Nome da categoria"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      autoFocus
-                    />
-                  ) : category.defaultCategory ? (
+                  {category.defaultCategory ? (
                     <span className="tag tag--attention">⚠ {category.name}</span>
                   ) : (
                     <span className="label-with-dot" style={categoryStyle(category.id)}>
@@ -214,21 +105,22 @@ export default function CategoriesPage() {
                 <td className="categories-page__actions">
                   {category.defaultCategory ? (
                     <span className="categories-page__protected">protegida</span>
-                  ) : editingId === category.id ? (
-                    <>
-                      <button className="btn btn--link" onClick={() => saveEditing(category.id)}>
-                        Guardar
-                      </button>
-                      <button className="btn btn--link" onClick={() => setEditingId(null)}>
-                        Cancelar
-                      </button>
-                    </>
                   ) : (
                     <>
-                      <button className="btn btn--link" onClick={() => startEditing(category)}>
+                      <button
+                        type="button"
+                        className="btn btn--link"
+                        onClick={() => openDialog(category)}
+                        aria-label={`Editar ${category.name}`}
+                      >
                         Editar
                       </button>
-                      <button className="btn btn--link btn--danger" onClick={() => deleteCategory(category.id)}>
+                      <button
+                        type="button"
+                        className="btn btn--link btn--danger"
+                        onClick={() => setToDelete(category)}
+                        aria-label={`Apagar ${category.name}`}
+                      >
                         Apagar
                       </button>
                     </>
@@ -238,99 +130,29 @@ export default function CategoriesPage() {
             ))}
           </tbody>
         </table>
+      )}
 
-        <form className="categories-page__form" onSubmit={handleCreateCategory}>
-          <input
-            className="field"
-            aria-label="Nova categoria"
-            placeholder="Nova categoria"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-          />
-          <button className="btn btn--primary" type="submit" disabled={creatingCategory || !newCategoryName.trim()}>
-            {creatingCategory ? "A criar…" : "Criar categoria"}
-          </button>
-        </form>
+      {dialog && (
+        <CategoryDialog
+          key={dialog.key}
+          open
+          category={dialog.category}
+          onClose={() => setDialog(null)}
+          onSaved={reload}
+          returnFocusRef={newButtonRef}
+        />
+      )}
 
-      </section>
-
-      <section className="section" aria-labelledby="rules-title">
-        <h2 className="section__title" id="rules-title">Regras de categorização</h2>
-        <p className="section__subtitle">
-          Quando uma transação importada contém a palavra-chave, é atribuída automaticamente à categoria.
-          Maiúsculas e acentos são ignorados.
-        </p>
-
-        {rules.length === 0 ? (
-          <div className="empty-state categories-page__empty">
-            <h3 className="empty-state__title">Ainda não há regras</h3>
-            <p className="empty-state__text">
-              Sem regras, os movimentos importados vão para "Outros". Por exemplo, a palavra-chave "continente" pode
-              enviar as compras do supermercado para Alimentação.
-            </p>
-            <div className="empty-state__actions">
-              <button type="button" className="btn btn--primary" onClick={() => keywordInputRef.current?.focus()}>
-                Criar a primeira regra
-              </button>
-            </div>
-          </div>
-        ) : (
-          <table className="ledger">
-            <thead>
-              <tr>
-                <th>Palavra-chave</th>
-                <th>Categoria</th>
-                <th>
-                  <span className="visually-hidden">Ações</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rules.map((rule) => (
-                <tr key={rule.id}>
-                  <td>{rule.keyword}</td>
-                  <td>
-                    <span className="tag" style={categoryStyle(rule.categoryId)}>
-                      {rule.categoryName}
-                    </span>
-                  </td>
-                  <td className="categories-page__actions">
-                    <button className="btn btn--link btn--danger" onClick={() => deleteRule(rule.id)}>
-                      Apagar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        <form className="categories-page__form" onSubmit={handleCreateRule}>
-          <input
-            ref={keywordInputRef}
-            className="field"
-            aria-label="Palavra-chave"
-            placeholder="Palavra-chave"
-            value={newRuleKeyword}
-            onChange={(e) => setNewRuleKeyword(e.target.value)}
-          />
-          <select className="field" aria-label="Categoria da regra" value={newRuleCategoryId} onChange={(e) => setNewRuleCategoryId(e.target.value)}>
-            <option value="">Categoria…</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <button
-            className="btn btn--primary"
-            type="submit"
-            disabled={creatingRule || !newRuleKeyword.trim() || !newRuleCategoryId}
-          >
-            {creatingRule ? "A criar…" : "Criar regra"}
-          </button>
-        </form>
-      </section>
+      <ConfirmDialog
+        open={toDelete !== null}
+        title="Apagar a categoria?"
+        description={`Os movimentos passam para ${categories?.find((c) => c.defaultCategory)?.name ?? "Sem Categoria"}.`}
+        confirmLabel="Apagar"
+        destructive
+        onConfirm={() => deleteCategory(toDelete!)}
+        onClose={() => setToDelete(null)}
+        returnFocusRef={newButtonRef}
+      />
     </AppLayout>
   );
 }

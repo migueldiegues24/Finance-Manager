@@ -4,6 +4,9 @@ import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
 import { formatCurrency } from "../utils/format";
 import "./ImportPage.css";
+import Notice from "../components/Notice";
+import { apiFailure, toNotice, type NoticeContent } from "../api/errors";
+import { countLabel } from "../utils/plural";
 
 type Bank = "CGD" | "GENERIC";
 
@@ -27,8 +30,13 @@ interface ImportSummary {
 }
 
 const BANK_HINTS: Record<Bank, string> = {
-  CGD: "Exporta a \"Consulta de movimentos\" na app da CGD (o ficheiro \"XLS\" serve, é um CSV), sem filtros.",
-  GENERIC: "Carrega um CSV com as colunas date, description, amount.",
+  CGD: "Consulta de movimentos da CGD, sem filtros.",
+  GENERIC: "CSV com as colunas date, description e amount.",
+};
+
+// Pormenor opcional por baixo da ajuda, em texto secundário.
+const BANK_DETAILS: Partial<Record<Bank, string>> = {
+  CGD: "O ficheiro “XLS” da app serve: é um CSV.",
 };
 
 export default function ImportPage() {
@@ -39,7 +47,7 @@ export default function ImportPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [analyzing, setAnalyzing] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
   const [result, setResult] = useState<ImportSummary | null>(null);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -62,8 +70,7 @@ export default function ImportPage() {
 
       const res = await apiFetch("/imports/parse", { method: "POST", body: formData });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível ler o ficheiro");
+        throw await apiFailure(res, "Não foi possível ler o extrato.", "Não foi possível ler o ficheiro: ");
       }
 
       const data: { filename: string; transactions: ParsedTransaction[] } = await res.json();
@@ -74,7 +81,7 @@ export default function ImportPage() {
       // cafés no mesmo dia, têm hashes diferentes e não são duplicados.
       setSelected(new Set(data.transactions.filter((t) => !t.duplicate).map((t) => t.hash)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
+      setError(toNotice(err));
     } finally {
       setAnalyzing(false);
     }
@@ -135,8 +142,7 @@ export default function ImportPage() {
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível confirmar a importação");
+        throw await apiFailure(res, "Não foi possível confirmar a importação.");
       }
 
       const data: ImportSummary = await res.json();
@@ -144,7 +150,7 @@ export default function ImportPage() {
       setTransactions(null);
       setFile(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
+      setError(toNotice(err));
     } finally {
       setConfirming(false);
     }
@@ -165,6 +171,7 @@ export default function ImportPage() {
         <p className="page-header__eyebrow">Importação</p>
         <h1 className="page-header__title">Importar extrato</h1>
         <p className="page-header__subtitle">{BANK_HINTS[bank]}</p>
+        {BANK_DETAILS[bank] && <p className="status__detail page-header__detail">{BANK_DETAILS[bank]}</p>}
       </header>
 
       <form className="import-page__upload" onSubmit={handleAnalyze}>
@@ -198,38 +205,41 @@ export default function ImportPage() {
         </button>
       </form>
 
-      {error && <p className="status status--error" role="alert">{error}</p>}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} />}
 
       {result && (
-        <div className="status status--success import-page__result" role="status">
-          <span>
-            Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}"
-            {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}
-            {result.importedAsDuplicate > 0 &&
-              `; ${result.importedAsDuplicate} ${result.importedAsDuplicate === 1 ? "foi importada" : "foram importadas"} de novo como duplicado`}
-            .
-          </span>
-          <Link className="btn btn--ghost btn--sm" to="/transactions">
-            Ver transações
-          </Link>
-        </div>
+        <Notice
+          tone="success"
+          title={`${countLabel(result.transactionsSaved, "movimento importado", "movimentos importados")}.`}
+          detail={[
+            result.filename,
+            result.duplicatesSkipped > 0 &&
+              `${result.duplicatesSkipped} já ${result.duplicatesSkipped === 1 ? "existia" : "existiam"}`,
+            result.importedAsDuplicate > 0 &&
+              countLabel(result.importedAsDuplicate, "duplicado de propósito", "duplicados de propósito"),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          action={
+            <Link className="btn btn--ghost btn--sm" to="/transactions">
+              Ver transações
+            </Link>
+          }
+        />
       )}
 
       {transactions && (
         <div className="import-page__review">
           {duplicateCount > 0 && (
-            <p className="status status--attention" role="note">
-              <strong>
-                ⚠ {duplicateCount === 1 ? "1 movimento já existe" : `${duplicateCount} movimentos já existem`}.
-              </strong>{" "}
-              Se {duplicateCount === 1 ? "o marcares, fica duplicado" : "os marcares, ficam duplicados"} e os totais
-              contam duas vezes.
-            </p>
+            <Notice
+              tone="attention"
+              title={`⚠ ${countLabel(duplicateCount, "já importado", "já importados")}. Marcar duplica os totais.`}
+            />
           )}
           <div className="import-page__toolbar">
             <p className="import-page__count">
-              {transactions.length} movimentos
-              {duplicateCount > 0 && ` · ${duplicateCount} já importados`}
+              {countLabel(transactions.length, "movimento", "movimentos")}
+              {duplicateCount > 0 && ` · ${countLabel(duplicateCount, "já importado", "já importados")}`}
             </p>
             <div className="import-page__select">
               <button
@@ -293,7 +303,7 @@ export default function ImportPage() {
                             : "tag import-page__duplicate-tag"
                         }
                       >
-                        {selected.has(t.hash) ? "⚠ Já importado · vai duplicar" : "Já importado"}
+                        {selected.has(t.hash) ? "⚠ Vai duplicar" : "Já importado"}
                       </span>
                     )}
                   </td>
@@ -328,10 +338,10 @@ export default function ImportPage() {
           <div className="import-bar" role="region" aria-label="Confirmar importação">
             <div className="app-shell__inner import-bar__inner">
               <p className="import-bar__summary" aria-live="polite">
-                <strong>{selected.size} selecionados</strong>
+                <strong>{countLabel(selected.size, "selecionado", "selecionados")}</strong>
                 {chosenDuplicates > 0 && (
                   <span className="import-bar__duplicates">
-                    ⚠ incl. {chosenDuplicates} já {chosenDuplicates === 1 ? "importado" : "importados"}
+                    ⚠ {countLabel(chosenDuplicates, "duplicado", "duplicados")}
                   </span>
                 )}
                 <span className="import-bar__totals">

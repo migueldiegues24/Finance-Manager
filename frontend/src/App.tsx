@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ImportPage from "./pages/ImportPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import TransactionsPage from "./pages/TransactionsPage";
+import RulesPage from "./pages/RulesPage";
 
 export default function App() {
   return (
@@ -44,6 +45,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CategoriesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rules"
+            element={
+              <ProtectedRoute>
+                <RulesPage />
               </ProtectedRoute>
             }
           />
