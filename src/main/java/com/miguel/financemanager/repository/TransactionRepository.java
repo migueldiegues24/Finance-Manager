@@ -26,6 +26,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "GROUP BY t.category.id, t.category.name")
     List<Object[]> sumExpensesByCategory(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
+    // Hashes dos movimentos do utilizador com os mesmos campos que entram na
+    // fingerprint. Data do movimento e saldo null só coincidem com null. Os
+    // CAST são necessários no Postgres: sem eles, um parâmetro null em
+    // "IS NULL" não tem tipo ("could not determine data type of parameter").
+    @Query("SELECT t.hash FROM Transaction t WHERE t.user = :user " +
+            "AND t.transactionDate = :date AND t.description = :description AND t.amount = :amount " +
+            "AND (t.movementDate = :movementDate OR (CAST(:movementDate AS LocalDate) IS NULL AND t.movementDate IS NULL)) " +
+            "AND (t.balanceAfter = :balanceAfter OR (CAST(:balanceAfter AS BigDecimal) IS NULL AND t.balanceAfter IS NULL))")
+    List<String> findHashesWithSameFields(@Param("user") User user, @Param("date") LocalDate date,
+                                          @Param("movementDate") LocalDate movementDate,
+                                          @Param("description") String description,
+                                          @Param("amount") BigDecimal amount,
+                                          @Param("balanceAfter") BigDecimal balanceAfter);
+
     // Soma das receitas (amount > 0) no intervalo; null se não houver nenhuma.
     @Query("SELECT SUM(t.amount) FROM Transaction t " +
             "WHERE t.user = :user AND t.amount > 0 AND t.transactionDate >= :start AND t.transactionDate < :end")
