@@ -64,11 +64,13 @@
        --color-header-ink: var(--color-bg);
        --color-header-ink-soft: color-mix(in srgb, var(--color-bg) 72%, transparent);
        --color-header-rule: var(--color-panel);
+       --color-header-accent: var(--color-bg);
      (texto suave a 7,1:1 sobre a tinta) */
   --color-header-bg: var(--color-bg);
   --color-header-ink: var(--color-ink);
   --color-header-ink-soft: var(--color-ink-soft);
   --color-header-rule: var(--color-ink);
+  --color-header-accent: var(--color-accent);
 
   /* Tipografia */
   --font-display: "Fraunces", Georgia, serif;
