@@ -6,7 +6,7 @@
 
 .auth-layout__panel {
   background: var(--color-panel);
-  color: var(--color-bg);
+  color: var(--color-panel-ink);
   padding: 4rem 3rem;
   display: flex;
   flex-direction: column;

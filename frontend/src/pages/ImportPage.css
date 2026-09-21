@@ -86,7 +86,7 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 3px double var(--color-ink);
   background: var(--color-bg);
-  box-shadow: 0 -8px 24px color-mix(in srgb, var(--color-ink) 10%, transparent);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--color-shadow) 10%, transparent);
 }
 
 .import-bar__inner {
