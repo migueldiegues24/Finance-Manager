@@ -31,12 +31,14 @@ export default function LoginPage() {
         <h2>Entrar</h2>
         <p className="auth-form__subtitle">Continua a acompanhar as tuas contas.</p>
 
-        {error && <p className="auth-form__error">{error}</p>}
+        {error && <p className="status status--error" role="alert">{error}</p>}
 
         <div className="auth-field">
-          <label htmlFor="email">Email</label>
+          <label className="field-label" htmlFor="email">Email</label>
           <input
             id="email"
+            className="field"
+            autoComplete="email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -45,9 +47,11 @@ export default function LoginPage() {
         </div>
 
         <div className="auth-field">
-          <label htmlFor="password">Password</label>
+          <label className="field-label" htmlFor="password">Password</label>
           <input
             id="password"
+            className="field"
+            autoComplete="current-password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -55,7 +59,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <button className="auth-form__submit" type="submit" disabled={submitting}>
+        <button className="btn btn--primary btn--block auth-form__submit" type="submit" disabled={submitting}>
           {submitting ? "A entrar…" : "Entrar"}
         </button>
 

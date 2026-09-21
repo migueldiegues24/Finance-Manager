@@ -42,6 +42,27 @@ public class DashboardService {
                 .map(CategoryTotalResponse::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new DashboardSummaryResponse(yearMonth.toString(), totals, overallTotal);
+        BigDecimal totalIncome = orZero(transactionRepository.sumIncome(user, start, end));
+        BigDecimal totalExpenses = orZero(transactionRepository.sumExpenses(user, start, end)).abs();
+        BigDecimal net = totalIncome.subtract(totalExpenses);
+
+        return new DashboardSummaryResponse(yearMonth.toString(), totals, overallTotal,
+                totalIncome, totalExpenses, net);
+    }
+
+    private static BigDecimal orZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    // Meses ("yyyy-MM", por ordem crescente) com pelo menos uma transação;
+    // usados pelo seletor de mês para assinalar onde há dados.
+    public List<String> getMonthsWithTransactions() {
+        User user = currentUserService.getCurrentUser();
+
+        return transactionRepository.findDistinctYearMonths(user).stream()
+                .map(row -> YearMonth.of(((Number) row[0]).intValue(), ((Number) row[1]).intValue()))
+                .sorted()
+                .map(YearMonth::toString)
+                .toList();
     }
 }

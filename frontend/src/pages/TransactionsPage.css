@@ -1,24 +1,47 @@
-.transactions-table td {
-  vertical-align: middle;
+.transactions-table__select {
+  width: auto;
+  max-width: 14rem;
+  min-height: 2.25rem;
+  padding-block: 0.3rem;
+  font-size: 0.875rem;
 }
 
-.transactions-table select {
-  border: none;
-  border-bottom: 1px solid var(--color-line);
-  background: transparent;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  padding: 0.3rem 0;
-  color: var(--color-ink);
-  outline: none;
-  cursor: pointer;
+@media (max-width: 640px) {
+  .transactions-table tbody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "desc amount"
+      "date category";
+  }
+
+  .transactions-table__select {
+    max-width: 11rem;
+  }
 }
 
-.transactions-table select:focus {
-  border-bottom-color: var(--color-ink);
+.transactions-table__category {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.transactions-table select:disabled {
-  opacity: 0.5;
-  cursor: default;
+/* O placeholder "Escolher categoria…" é uma ação, não um valor. */
+.is-uncategorized .transactions-table__select {
+  border-bottom-color: var(--color-attention);
+  color: var(--color-attention);
+}
+
+.transactions-page__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .transactions-table__category {
+    justify-content: flex-end;
+  }
 }

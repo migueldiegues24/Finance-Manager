@@ -1,31 +1,5 @@
-.categories-page__title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 400;
-  margin-bottom: 1.5rem;
-}
-
-.categories-page__title--rules {
-  margin-top: 3.5rem;
-}
-
 .categories-page__actions {
-  text-align: right;
-}
-
-.categories-page__actions button {
-  background: none;
-  border: none;
-  color: var(--color-ink-soft);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0 0.4rem;
-  font-family: var(--font-mono);
-}
-
-.categories-page__actions button:hover {
-  color: var(--color-ink);
-  text-decoration: underline;
+  white-space: nowrap;
 }
 
 .categories-page__protected {
@@ -34,52 +8,32 @@
   font-style: italic;
 }
 
+/* O campo de edição ocupa o lugar do nome sem mudar a altura da linha. */
 .categories-page__inline-input {
-  border: none;
-  border-bottom: 1px solid var(--color-ink);
-  background: transparent;
-  font-family: var(--font-mono);
+  min-height: 0;
+  padding-block: 0;
   font-size: 1rem;
-  padding: 0.2rem 0;
-  outline: none;
-  width: 100%;
 }
 
 .categories-page__form {
   display: flex;
-  gap: 0.75rem;
-  margin: 1.5rem 0;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
 }
 
-.categories-page__form input,
-.categories-page__form select {
-  border: none;
-  border-bottom: 1px solid var(--color-line);
-  background: transparent;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  padding: 0.5rem 0;
-  outline: none;
-  flex: 1;
+.categories-page__form .field {
+  flex: 1 1 12rem;
+  width: auto;
 }
 
-.categories-page__form input:focus,
-.categories-page__form select:focus {
-  border-bottom-color: var(--color-ink);
+@media (max-width: 640px) {
+  .categories-page__form .btn {
+    flex: 1 1 100%;
+  }
 }
 
-.categories-page__form button {
-  background: var(--color-ink);
-  color: var(--color-bg);
-  border: none;
-  padding: 0.55rem 1.1rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-.categories-page__form button:disabled {
-  opacity: 0.5;
-  cursor: default;
+.categories-page__empty {
+  margin-bottom: var(--space-2);
 }
