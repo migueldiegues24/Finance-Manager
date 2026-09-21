@@ -1,50 +1,120 @@
-.app-shell__header {
+.app-shell {
+  min-height: 100%;
   display: flex;
-  align-items: center;
-  gap: 2.5rem;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--color-line);
-  max-width: 960px;
-  margin: 0 auto;
+  flex-direction: column;
+}
+
+/* Container comum: o interior do cabeçalho e o conteúdo alinham pelas mesmas margens. */
+.app-shell__inner {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* A faixa e a linha dupla ocupam a largura toda; só o interior é limitado. */
+.app-shell__header {
+  background: var(--color-header-bg);
+  color: var(--color-header-ink);
+  border-bottom: 3px double var(--color-header-rule);
+}
+
+.app-shell__bar {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-6);
+  min-height: 4.5rem;
 }
 
 .app-shell__mark {
+  display: flex;
+  align-items: center;
   font-family: var(--font-display);
   font-size: 1.3rem;
-  color: var(--color-ink);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .app-shell__nav {
   display: flex;
-  gap: 1.75rem;
+  gap: var(--space-5);
   flex: 1;
 }
 
-.app-shell__nav a {
-  text-decoration: none;
-  color: var(--color-ink-soft);
-  font-size: 0.9rem;
-  padding-bottom: 0.3rem;
+/* O sublinhado de 2px existe sempre (transparente), por isso o estado
+   ativo só muda de cor e não desloca nada. */
+.app-shell__link {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-1);
   border-bottom: 2px solid transparent;
+  color: var(--color-header-ink-soft);
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.app-shell__nav a.active,
-.app-shell__nav a:hover {
-  color: var(--color-ink);
-  border-bottom-color: var(--color-ink);
+.app-shell__link.active {
+  color: var(--color-header-ink);
+  border-bottom-color: var(--color-header-ink);
 }
 
 .app-shell__logout {
-  background: transparent;
-  border: 1px solid var(--color-line);
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: var(--color-ink);
+  align-self: center;
+  color: var(--color-header-ink);
+  border-color: color-mix(in srgb, var(--color-header-ink) 55%, transparent);
 }
 
 .app-shell__main {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 3rem 1.5rem 5rem;
+  flex: 1;
+  padding-block: var(--space-7) var(--space-8);
+}
+
+@media (max-width: 640px) {
+  .app-shell__bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "mark logout"
+      "nav nav";
+    column-gap: var(--space-4);
+    min-height: 0;
+    padding-top: var(--space-3);
+  }
+
+  .app-shell__mark {
+    grid-area: mark;
+    font-size: 1.15rem;
+  }
+
+  .app-shell__logout {
+    grid-area: logout;
+  }
+
+  /* Navegação numa segunda linha; se não couber, faz scroll horizontal
+     sem sair das margens da página. */
+  .app-shell__nav {
+    grid-area: nav;
+    gap: var(--space-4);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .app-shell__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-shell__link {
+    min-height: 2.75rem;
+    flex-shrink: 0;
+  }
+
+  .app-shell__main {
+    padding-block: var(--space-6) var(--space-7);
+  }
 }
