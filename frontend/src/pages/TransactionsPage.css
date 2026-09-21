@@ -18,3 +18,30 @@
     max-width: 11rem;
   }
 }
+
+.transactions-table__category {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* O placeholder "Escolher categoria…" é uma ação, não um valor. */
+.is-uncategorized .transactions-table__select {
+  border-bottom-color: var(--color-attention);
+  color: var(--color-attention);
+}
+
+.transactions-page__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .transactions-table__category {
+    justify-content: flex-end;
+  }
+}
