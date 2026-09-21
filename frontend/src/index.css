@@ -120,3 +120,27 @@ a {
   background: var(--color-ink);
   color: var(--color-bg);
 }
+
+/* ---------- Foco e movimento ---------- */
+
+/* Anel de foco só para teclado. A cor vem de --color-focus, que os
+   contextos com outro fundo (ex.: cabeçalho) podem redefinir. */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

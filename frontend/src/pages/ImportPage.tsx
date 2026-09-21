@@ -186,7 +186,7 @@ export default function ImportPage() {
           <p className="import-page__count">
             {transactions.length} movimentos · {selected.size} selecionados
           </p>
-          <table className="ledger ledger--stack import-table" role="table">
+          <table className="ledger ledger--stack ledger--interactive import-table" role="table">
             <thead role="rowgroup">
               <tr role="row">
                 <th role="columnheader" scope="col" className="ledger__cell--check">
