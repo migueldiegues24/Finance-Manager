@@ -31,10 +31,12 @@ interface Category {
 
 const percentFormat = new Intl.NumberFormat("pt-PT", { style: "percent", maximumFractionDigits: 0 });
 
-function netCaption(net: number): string {
-  if (net > 0) return "Entrou mais do que saiu";
-  if (net < 0) return "Saiu mais do que entrou";
-  return "Entradas e saídas equilibradas";
+// Cor do balanço: verde se positivo, vermelho se negativo, tinta se zero.
+// O sinal (+/−) acompanha sempre a cor.
+function netTone(net: number): "positive" | "negative" | "zero" {
+  if (net > 0) return "positive";
+  if (net < 0) return "negative";
+  return "zero";
 }
 
 export default function DashboardPage() {
@@ -89,30 +91,25 @@ export default function DashboardPage() {
 
       {summary && !loading && !error && !isEmpty && (
         <>
-          <section className="summary-cards" aria-label="Resumo do mês">
-            <div className="summary-card summary-card--income">
-              <p className="summary-card__label">Receitas</p>
-              <p className="summary-card__value ledger__amount ledger__amount--income">
-                +{formatCurrency(summary.totalIncome)}
-              </p>
-            </div>
-            <div className="summary-card summary-card--expense">
-              <p className="summary-card__label">Despesas</p>
-              <p className="summary-card__value ledger__amount">−{formatCurrency(summary.totalExpenses)}</p>
-            </div>
-            <div className="summary-card summary-card--net">
+          <section className="summary" aria-label="Resumo do mês">
+            <div className={`summary-card summary-card--net summary-card--${netTone(summary.net)}`}>
               <p className="summary-card__label">Balanço do mês</p>
-              <p
-                className={
-                  summary.net < 0
-                    ? "summary-card__value ledger__amount"
-                    : "summary-card__value ledger__amount ledger__amount--income"
-                }
-              >
-                {summary.net < 0 ? "−" : "+"}
+              <p className="summary-card__value summary-card__value--hero">
+                {summary.net > 0 ? "+" : summary.net < 0 ? "−" : ""}
                 {formatCurrency(Math.abs(summary.net))}
               </p>
-              <p className="summary-card__caption">{netCaption(summary.net)}</p>
+            </div>
+            <div className="summary__secondary">
+              <div className="summary-card summary-card--income">
+                <p className="summary-card__label">Receitas</p>
+                <p className="summary-card__value ledger__amount ledger__amount--income">
+                  +{formatCurrency(summary.totalIncome)}
+                </p>
+              </div>
+              <div className="summary-card summary-card--expense">
+                <p className="summary-card__label">Despesas</p>
+                <p className="summary-card__value ledger__amount">−{formatCurrency(summary.totalExpenses)}</p>
+              </div>
             </div>
           </section>
 
