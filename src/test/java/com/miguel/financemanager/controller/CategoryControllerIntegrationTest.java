@@ -138,4 +138,120 @@ class CategoryControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Não é possível apagar a categoria \"Sem Categoria\""));
     }
+
+    // ---------- Cor ----------
+
+    private MvcResult createCategory(String token, Map<String, Object> body) throws Exception {
+        return mockMvc.perform(post("/api/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andReturn();
+    }
+
+    private long idOf(MvcResult result) throws Exception {
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+    }
+
+    @Test
+    void seededCategoriesHaveNoColour() throws Exception {
+        mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].color", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())));
+    }
+
+    @Test
+    void validColourIsStoredUppercaseAndReturnedEverywhere() throws Exception {
+        MvcResult created = createCategory(accessToken, Map.of("name", "Viagens", "color", "#1f5e6b"));
+        org.assertj.core.api.Assertions.assertThat(created.getResponse().getStatus()).isEqualTo(200);
+        org.assertj.core.api.Assertions.assertThat(
+                objectMapper.readTree(created.getResponse().getContentAsString()).get("color").asText()).isEqualTo("#1F5E6B");
+
+        mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(jsonPath("$[?(@.name == 'Viagens')].color").value("#1F5E6B"));
+
+        mockMvc.perform(put("/api/categories/" + idOf(created))
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "Viagens", "color", "#AbCdEf"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.color").value("#ABCDEF"));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"red", "#12", "#GGGGGG", "url(x)", "#ff0000;x", ""})
+    void invalidColourIsRejectedWith400AndShortMessage(String colour) throws Exception {
+        mockMvc.perform(post("/api/categories")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "Teste cor", "color", colour))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Cor inválida. Usa #RRGGBB."));
+
+        mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(jsonPath("$[?(@.name == 'Teste cor')]").isEmpty());
+    }
+
+    @Test
+    void colourCanBeClearedWithNullOrByOmittingIt() throws Exception {
+        long id = idOf(createCategory(accessToken, Map.of("name", "Casa 2", "color", "#1F5E6B")));
+        Map<String, Object> withNull = new java.util.HashMap<>();
+        withNull.put("name", "Casa 2");
+        withNull.put("color", null);
+
+        mockMvc.perform(put("/api/categories/" + id)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(withNull)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.color").value(org.hamcrest.Matchers.nullValue()));
+
+        long other = idOf(createCategory(accessToken, Map.of("name", "Casa 3", "color", "#1F5E6B")));
+        mockMvc.perform(put("/api/categories/" + other)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "Casa 3"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.color").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    void protectedCategoryColourCannotChange() throws Exception {
+        MvcResult list = mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken)).andReturn();
+        long protectedId = 0;
+        for (com.fasterxml.jackson.databind.JsonNode c : objectMapper.readTree(list.getResponse().getContentAsString())) {
+            if (c.get("defaultCategory").asBoolean()) protectedId = c.get("id").asLong();
+        }
+
+        mockMvc.perform(put("/api/categories/" + protectedId)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "Sem Categoria", "color", "#1F5E6B"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("Sem Categoria")));
+
+        mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(jsonPath("$[?(@.defaultCategory == true)].color").value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.nullValue())));
+    }
+
+    @Test
+    void anotherUsersCategoryCannotBeRecoloured() throws Exception {
+        long mine = idOf(createCategory(accessToken, Map.of("name", "Minha", "color", "#1F5E6B")));
+
+        MvcResult other = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("email", "outro-cor@teste.com", "password", "password123"))))
+                .andReturn();
+        String otherToken = objectMapper.readTree(other.getResponse().getContentAsString()).get("accessToken").asText();
+
+        mockMvc.perform(put("/api/categories/" + mine)
+                        .header("Authorization", "Bearer " + otherToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "Minha", "color", "#000000"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Categoria não encontrada"));
+
+        mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(jsonPath("$[?(@.name == 'Minha')].color").value("#1F5E6B"));
+    }
 }

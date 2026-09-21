@@ -92,20 +92,74 @@ class CategoryServiceTest {
     }
 
     @Test
-    void renameCategory_rejectsWhenCategoryIsDefault() {
+    void createCategory_storesColourInUppercase() {
+        when(categoryRepository.existsByUserAndName(user, "Lazer")).thenReturn(false);
+        when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        CategoryRequest request = new CategoryRequest();
+        request.setName("Lazer");
+        request.setColor("#1f5e6b");
+
+        CategoryResponse response = categoryService.createCategory(request);
+
+        assertThat(response.getColor()).isEqualTo("#1F5E6B");
+    }
+
+    @Test
+    void createCategory_rejectsInvalidColourWithoutSaving() {
+        CategoryRequest request = new CategoryRequest();
+        request.setName("Lazer");
+        request.setColor("url(x)");
+
+        assertThatThrownBy(() -> categoryService.createCategory(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Cor inválida. Usa #RRGGBB.");
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_withoutColourClearsIt() {
+        Category category = Category.builder().id(8L).user(user).name("Lazer").color("#1F5E6B").isDefault(false).build();
+        when(categoryRepository.findById(8L)).thenReturn(Optional.of(category));
+        when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        CategoryRequest request = new CategoryRequest();
+        request.setName("Lazer");
+
+        CategoryResponse response = categoryService.updateCategory(8L, request);
+
+        assertThat(response.getColor()).isNull();
+        assertThat(category.getColor()).isNull();
+    }
+
+    @Test
+    void updateCategory_rejectsColourChangeOnProtectedCategory() {
+        Category defaultCategory = Category.builder().id(5L).user(user).name("Sem Categoria").isDefault(true).build();
+        when(categoryRepository.findById(5L)).thenReturn(Optional.of(defaultCategory));
+        CategoryRequest request = new CategoryRequest();
+        request.setName("Sem Categoria");
+        request.setColor("#1F5E6B");
+
+        assertThatThrownBy(() -> categoryService.updateCategory(5L, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Sem Categoria");
+        assertThat(defaultCategory.getColor()).isNull();
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_rejectsWhenCategoryIsDefault() {
         Category defaultCategory = Category.builder().id(5L).user(user).name("Sem Categoria").isDefault(true).build();
         when(categoryRepository.findById(5L)).thenReturn(Optional.of(defaultCategory));
 
         CategoryRequest request = new CategoryRequest();
         request.setName("Outro nome");
 
-        assertThatThrownBy(() -> categoryService.renameCategory(5L, request))
+        assertThatThrownBy(() -> categoryService.updateCategory(5L, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Sem Categoria");
     }
 
     @Test
-    void renameCategory_rejectsWhenCategoryBelongsToAnotherUser() {
+    void updateCategory_rejectsWhenCategoryBelongsToAnotherUser() {
         User otherUser = User.builder().id(2L).email("outro@teste.com").passwordHash("hash").build();
         Category category = Category.builder().id(7L).user(otherUser).name("Alimentação").isDefault(false).build();
         when(categoryRepository.findById(7L)).thenReturn(Optional.of(category));
@@ -113,7 +167,7 @@ class CategoryServiceTest {
         CategoryRequest request = new CategoryRequest();
         request.setName("Novo nome");
 
-        assertThatThrownBy(() -> categoryService.renameCategory(7L, request))
+        assertThatThrownBy(() -> categoryService.updateCategory(7L, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("não encontrada");
     }
