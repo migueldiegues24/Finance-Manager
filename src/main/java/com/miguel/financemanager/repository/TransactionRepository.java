@@ -25,6 +25,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "GROUP BY t.category.id, t.category.name")
     List<Object[]> sumExpensesByCategory(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
+    // Cada linha: [ano (Integer), mês (Integer)] com pelo menos uma transação do utilizador.
+    @Query("SELECT DISTINCT YEAR(t.transactionDate), MONTH(t.transactionDate) FROM Transaction t WHERE t.user = :user")
+    List<Object[]> findDistinctYearMonths(@Param("user") User user);
+
     // Usado quando uma categoria é apagada: todas as transações que
     // apontavam para ela passam a apontar para a categoria fallback
     // ("Sem Categoria"), em vez de ficarem órfãs.

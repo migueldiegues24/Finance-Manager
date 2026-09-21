@@ -71,6 +71,26 @@ class DashboardServiceTest {
     }
 
     @Test
+    void getMonthsWithTransactions_formatsAndSortsAscending() {
+        List<Object[]> rows = List.of(
+                new Object[]{2026, 9},
+                new Object[]{2025, 12},
+                new Object[]{2026, 1}
+        );
+        when(transactionRepository.findDistinctYearMonths(user)).thenReturn(rows);
+
+        assertThat(dashboardService.getMonthsWithTransactions())
+                .containsExactly("2025-12", "2026-01", "2026-09");
+    }
+
+    @Test
+    void getMonthsWithTransactions_returnsEmptyListWhenUserHasNoTransactions() {
+        when(transactionRepository.findDistinctYearMonths(user)).thenReturn(List.of());
+
+        assertThat(dashboardService.getMonthsWithTransactions()).isEmpty();
+    }
+
+    @Test
     void getMonthlySummary_returnsZeroOverallTotalWhenNoExpenses() {
         when(transactionRepository.sumExpensesByCategory(eq(user), any(), any())).thenReturn(List.of());
 
