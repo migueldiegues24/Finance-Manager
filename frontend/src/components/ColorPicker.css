@@ -1,0 +1,154 @@
+.color-picker {
+  min-width: 0;
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  border: none;
+}
+
+/* A legenda de um fieldset tem recuo próprio; alinha-a com as outras labels. */
+.color-picker > legend {
+  padding: 0;
+}
+
+.color-picker__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* Cada amostra é um rádio nativo escondido com um "chip" visível. */
+.color-swatch {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.color-swatch__chip {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--swatch);
+  background-clip: content-box;
+  padding: 2px;
+  color: var(--color-bg);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.color-swatch:hover .color-swatch__chip {
+  border-color: var(--color-line-strong);
+}
+
+/* Escolhida: anel a tinta e ✓ no centro (não só pela cor). */
+.color-swatch input:checked + .color-swatch__chip {
+  border-color: var(--color-ink);
+}
+
+.color-swatch:has(input:focus-visible) .color-swatch__chip,
+.color-swatch:has(input:focus-visible) .color-swatch__label {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.color-swatch__label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-control-line);
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  transition:
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
+}
+
+.color-swatch:hover .color-swatch__label {
+  border-color: var(--color-ink);
+}
+
+.color-swatch input:checked + .color-swatch__label {
+  border-color: var(--color-ink);
+  background: var(--color-row-hover);
+  font-weight: 500;
+}
+
+.color-picker__custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.color-picker__custom .field-label {
+  margin: 0;
+}
+
+.color-picker__input {
+  width: 3rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--color-control-line);
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-picker__hex {
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.color-picker__actions {
+  margin-top: var(--space-2);
+}
+
+.color-picker__actions .btn--link {
+  padding-left: 0;
+}
+
+/* Pré-visualização nos dois temas, com os tokens do tema redefinidos. */
+.color-picker__preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.color-picker__preview-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 0.85rem;
+}
+
+.color-picker__preview-box .tag,
+.color-picker__preview-box .label-with-dot {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.color-picker__preview-theme {
+  color: color-mix(in srgb, var(--color-ink) 72%, transparent);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.color-picker__hint {
+  min-height: 1.2em;
+  margin-top: var(--space-2);
+}

@@ -3,6 +3,7 @@ import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
 import CategoryDialog from "../components/CategoryDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { useTheme } from "../theme/themeContext";
 import { categoryStyle } from "../utils/categoryColor";
 import "./CategoriesPage.css";
 import Notice from "../components/Notice";
@@ -12,6 +13,8 @@ interface Category {
   id: number;
   name: string;
   defaultCategory: boolean;
+  // #RRGGBB ou null/ausente (cor automática).
+  color?: string | null;
 }
 
 async function fetchCategories(): Promise<Category[]> {
@@ -32,6 +35,7 @@ export default function CategoriesPage() {
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [toDelete, setToDelete] = useState<Category | null>(null);
   const newButtonRef = useRef<HTMLButtonElement>(null);
+  const { theme } = useTheme();
 
   // Recarrega depois de gravar ou apagar; os diálogos esperam por isto
   // antes de fechar, para a lista já estar atualizada.
@@ -96,7 +100,7 @@ export default function CategoriesPage() {
                   {category.defaultCategory ? (
                     <span className="tag tag--attention">⚠ {category.name}</span>
                   ) : (
-                    <span className="label-with-dot" style={categoryStyle(category.id)}>
+                    <span className="label-with-dot" style={categoryStyle(category.id, category.color, theme)}>
                       <span className="dot" aria-hidden="true" />
                       {category.name}
                     </span>

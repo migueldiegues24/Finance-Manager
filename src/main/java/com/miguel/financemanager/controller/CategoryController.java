@@ -28,8 +28,8 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponse> rename(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
-        return ResponseEntity.ok(categoryService.renameCategory(id, request));
+    public ResponseEntity<CategoryResponse> update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, request));
     }
 
     @DeleteMapping("/{id}")

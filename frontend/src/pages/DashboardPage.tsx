@@ -5,6 +5,7 @@ import AppLayout from "../components/AppLayout";
 import EmptyMonth from "../components/EmptyMonth";
 import MonthNav from "../components/MonthNav";
 import { useMonthParam } from "../hooks/useMonthParam";
+import { useTheme } from "../theme/themeContext";
 import { categoryStyle } from "../utils/categoryColor";
 import { formatCurrency } from "../utils/format";
 import "./DashboardPage.css";
@@ -29,6 +30,7 @@ interface DashboardSummary {
 interface Category {
   id: number;
   defaultCategory: boolean;
+  color?: string | null;
 }
 
 const percentFormat = new Intl.NumberFormat("pt-PT", { style: "percent", maximumFractionDigits: 0 });
@@ -45,6 +47,8 @@ export default function DashboardPage() {
   const [month, setMonth] = useMonthParam();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [uncategorizedId, setUncategorizedId] = useState<number | null>(null);
+  const [colors, setColors] = useState<Map<number, string | null | undefined>>(new Map());
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<NoticeContent | null>(null);
 
@@ -63,6 +67,7 @@ export default function DashboardPage() {
         if (!cancelled) {
           setSummary(data);
           setUncategorizedId(categories.find((c) => c.defaultCategory)?.id ?? null);
+          setColors(new Map(categories.map((c) => [c.id, c.color])));
         }
       })
       .catch((err) => {
@@ -136,7 +141,7 @@ export default function DashboardPage() {
                     const share = summary.overallTotal > 0 ? row.total / summary.overallTotal : 0;
                     const uncategorized = row.categoryId === uncategorizedId;
                     return (
-                      <tr key={row.categoryId} style={categoryStyle(row.categoryId)}>
+                      <tr key={row.categoryId} style={categoryStyle(row.categoryId, colors.get(row.categoryId), theme)}>
                         <td>
                           <div className="dashboard__category">
                             {uncategorized ? (
