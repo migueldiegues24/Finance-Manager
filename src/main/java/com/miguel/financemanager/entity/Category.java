@@ -34,6 +34,11 @@ public class Category {
     @Builder.Default
     private boolean isDefault = false;
 
+    // Cor escolhida pelo utilizador (#RRGGBB em maiúsculas); null = cor
+    // automática. Validada no serviço e por um CHECK na BD (V5).
+    @Column(length = 7)
+    private String color;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

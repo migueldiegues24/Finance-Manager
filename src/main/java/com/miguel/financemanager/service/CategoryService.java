@@ -7,6 +7,7 @@ import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.TransactionRepository;
+import com.miguel.financemanager.service.util.CategoryColors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,7 @@ public class CategoryService {
 
     public List<CategoryResponse> listCategories() {
         User user = currentUserService.getCurrentUser();
-        return categoryRepository.findByUser(user).stream()
+        return categoryRepository.findByUserOrderByIsDefaultAscIdAsc(user).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -32,6 +33,7 @@ public class CategoryService {
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
         User user = currentUserService.getCurrentUser();
+        String color = CategoryColors.normalize(request.getColor());
 
         if (categoryRepository.existsByUserAndName(user, request.getName())) {
             throw new IllegalArgumentException("Já existe uma categoria com este nome");
@@ -40,14 +42,17 @@ public class CategoryService {
         Category category = Category.builder()
                 .user(user)
                 .name(request.getName())
+                .color(color)
                 .isDefault(false)
                 .build();
 
         return toResponse(categoryRepository.save(category));
     }
 
+    // Substitui nome e cor. A categoria protegida não pode mudar (nem de
+    // nome nem de cor): continua a usar o ocre de aviso no frontend.
     @Transactional
-    public CategoryResponse renameCategory(Long categoryId, CategoryRequest request) {
+    public CategoryResponse updateCategory(Long categoryId, CategoryRequest request) {
         User user = currentUserService.getCurrentUser();
         Category category = getOwnedCategory(categoryId, user);
 
@@ -60,7 +65,10 @@ public class CategoryService {
             throw new IllegalArgumentException("Já existe uma categoria com este nome");
         }
 
+        String color = CategoryColors.normalize(request.getColor());
+
         category.setName(request.getName());
+        category.setColor(color);
         return toResponse(categoryRepository.save(category));
     }
 
@@ -96,6 +104,6 @@ public class CategoryService {
     }
 
     private CategoryResponse toResponse(Category category) {
-        return new CategoryResponse(category.getId(), category.getName(), category.isDefault());
+        return new CategoryResponse(category.getId(), category.getName(), category.isDefault(), category.getColor());
     }
 }

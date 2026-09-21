@@ -1,5 +1,7 @@
 import { useId, useState, type FormEvent, type RefObject } from "react";
 import { apiFetch } from "../api/client";
+import { choiceFromStored, storedFromChoice, type ColorChoice } from "../utils/colorChoice";
+import ColorPicker from "./ColorPicker";
 import Modal from "./Modal";
 import Notice from "./Notice";
 import { apiFailure, toNotice, type NoticeContent } from "../api/errors";
@@ -7,7 +9,7 @@ import { apiFailure, toNotice, type NoticeContent } from "../api/errors";
 interface CategoryDialogProps {
   open: boolean;
   // null = nova categoria; caso contrário, edita esta.
-  category: { id: number; name: string } | null;
+  category: { id: number; name: string; color?: string | null } | null;
   onClose: () => void;
   // Chamado depois de gravar; o diálogo fecha quando a lista estiver atualizada.
   onSaved: () => Promise<void>;
@@ -20,6 +22,7 @@ export default function CategoryDialog({ open, category, onClose, onSaved, retur
   const formId = useId();
   const inputId = useId();
   const [name, setName] = useState(category?.name ?? "");
+  const [color, setColor] = useState<ColorChoice>(() => choiceFromStored(category?.color));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<NoticeContent | null>(null);
   const isEdit = category !== null;
@@ -33,7 +36,9 @@ export default function CategoryDialog({ open, category, onClose, onSaved, retur
     try {
       const res = await apiFetch(isEdit ? `/categories/${category.id}` : "/categories", {
         method: isEdit ? "PUT" : "POST",
-        body: JSON.stringify({ name: name.trim() }),
+        // O PUT substitui a categoria inteira: envia sempre nome e cor
+        // (null = cor automática).
+        body: JSON.stringify({ name: name.trim(), color: storedFromChoice(color) }),
       });
       if (!res.ok) {
         throw await apiFailure(res, isEdit ? "Não foi possível editar a categoria." : "Não foi possível criar a categoria.");
@@ -78,6 +83,7 @@ export default function CategoryDialog({ open, category, onClose, onSaved, retur
           autoComplete="off"
           required
         />
+        <ColorPicker value={color} onChange={setColor} previewName={name.trim()} categoryId={category?.id ?? null} />
       </form>
     </Modal>
   );
