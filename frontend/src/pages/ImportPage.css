@@ -55,8 +55,39 @@
 }
 
 .import-page__duplicate-tag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-line-strong);
   color: var(--color-ink-soft);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.import-table .is-duplicate .ledger__cell--desc,
+.import-table .is-duplicate .ledger__cell--amount {
+  color: var(--color-ink-soft);
+}
+
+.import-table input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--color-ink);
+}
+
+@media (max-width: 640px) {
+  .import-table tbody tr {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check desc amount"
+      "check date balance";
+  }
+
+  .import-table input[type="checkbox"] {
+    margin-top: 0.3rem;
+  }
 }
 
 .import-page__confirm {

@@ -69,21 +69,21 @@ export default function DashboardPage() {
             <thead>
               <tr>
                 <th>Categoria</th>
-                <th>Total</th>
+                <th className="ledger__num">Total</th>
               </tr>
             </thead>
             <tbody>
               {summary.totals.map((row) => (
                 <tr key={row.categoryId}>
                   <td>{row.categoryName}</td>
-                  <td className="ledger__amount">−{formatCurrency(row.total)}</td>
+                  <td className="ledger__num ledger__amount">−{formatCurrency(row.total)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
                 <td>Total do mês</td>
-                <td className="ledger__amount">−{formatCurrency(summary.overallTotal)}</td>
+                <td className="ledger__num ledger__amount">−{formatCurrency(summary.overallTotal)}</td>
               </tr>
             </tfoot>
           </table>

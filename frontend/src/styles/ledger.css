@@ -1,0 +1,160 @@
+/*
+ * Tabelas em estilo livro-razão, partilhadas por todas as páginas.
+ * Linhas alternadas: ímpares com o fundo, pares com --color-row-alt
+ * (derivado do fundo e da tinta).
+ */
+
+.ledger {
+  --cell-x: var(--space-3);
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger th {
+  padding: 0 var(--cell-x) var(--space-2);
+  border-bottom: 1px solid var(--color-ink);
+  color: var(--color-ink-soft);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ledger td {
+  padding: 0.8rem var(--cell-x);
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+}
+
+.ledger tbody tr:nth-child(even) {
+  background: var(--color-row-alt);
+}
+
+.ledger th:last-child,
+.ledger td:last-child,
+.ledger .ledger__num {
+  text-align: right;
+}
+
+.ledger__amount {
+  color: var(--color-expense);
+  white-space: nowrap;
+}
+
+.ledger__amount--income {
+  color: var(--color-income);
+}
+
+.ledger__cell--date {
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.ledger__cell--balance {
+  white-space: nowrap;
+}
+
+.ledger th.ledger__cell--check,
+.ledger td.ledger__cell--check {
+  width: 1%;
+  padding-right: 0;
+  text-align: left;
+}
+
+/* Rótulo só visível no modo empilhado, onde o cabeçalho da tabela não aparece. */
+.ledger__cell-label {
+  display: none;
+}
+
+.ledger tfoot td {
+  padding: 1.1rem var(--cell-x) 0;
+  border-top: 3px double var(--color-ink);
+  border-bottom: none;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.ledger tfoot .ledger__amount {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+/*
+ * Modo empilhado: em ecrãs estreitos cada linha passa a uma entrada de
+ * duas linhas em grid. O display muda, por isso a semântica de tabela é
+ * mantida com role="table/rowgroup/row/columnheader/cell" no markup. Cada
+ * tabela define a sua grid-template-areas com as áreas abaixo.
+ */
+@media (max-width: 640px) {
+  .ledger--stack,
+  .ledger--stack tbody {
+    display: block;
+  }
+
+  .ledger--stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .ledger--stack tbody tr {
+    display: grid;
+    align-items: center;
+    column-gap: var(--space-3);
+    row-gap: var(--space-1);
+    padding: var(--space-3) var(--cell-x);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .ledger--stack tbody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    text-align: left;
+  }
+
+  .ledger--stack .ledger__cell--desc {
+    grid-area: desc;
+    overflow-wrap: anywhere;
+  }
+
+  .ledger--stack .ledger__cell--amount {
+    grid-area: amount;
+    text-align: right;
+  }
+
+  .ledger--stack .ledger__cell--date {
+    grid-area: date;
+    font-size: 0.82rem;
+  }
+
+  .ledger--stack .ledger__cell--category {
+    grid-area: category;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .ledger--stack .ledger__cell--balance {
+    grid-area: balance;
+    color: var(--color-ink-soft);
+    font-size: 0.82rem;
+    text-align: right;
+  }
+
+  .ledger--stack td.ledger__cell--check {
+    grid-area: check;
+    align-self: start;
+    width: auto;
+  }
+
+  .ledger--stack .ledger__cell-label {
+    display: inline;
+  }
+}

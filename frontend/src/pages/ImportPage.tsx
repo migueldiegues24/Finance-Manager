@@ -172,39 +172,62 @@ export default function ImportPage() {
 
       {transactions && (
         <>
-          <table className="ledger">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                {hasBalance && <th>Saldo</th>}
+          <table className="ledger ledger--stack import-table" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader" scope="col" className="ledger__cell--check">
+                  <span className="visually-hidden">Importar</span>
+                </th>
+                <th role="columnheader" scope="col">Data</th>
+                <th role="columnheader" scope="col">Descrição</th>
+                <th role="columnheader" scope="col" className="ledger__num">Valor</th>
+                {hasBalance && <th role="columnheader" scope="col" className="ledger__num">Saldo</th>}
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {transactions.map((t) => (
-                <tr key={t.hash}>
-                  <td>
+                <tr role="row" key={t.hash} className={t.duplicate ? "is-duplicate" : undefined}>
+                  <td role="cell" className="ledger__cell--check">
                     <input
                       type="checkbox"
                       checked={selected.has(t.hash)}
                       disabled={t.duplicate}
                       onChange={() => toggle(t.hash)}
+                      aria-label={`Importar ${t.description} de ${t.date}`}
                     />
                   </td>
-                  <td title={t.movementDate && t.movementDate !== t.date ? `Data do movimento: ${t.movementDate}` : undefined}>
+                  <td
+                    role="cell"
+                    className="ledger__cell--date"
+                    title={t.movementDate && t.movementDate !== t.date ? `Data do movimento: ${t.movementDate}` : undefined}
+                  >
                     {t.date}
                   </td>
-                  <td>
+                  <td role="cell" className="ledger__cell--desc">
                     {t.description}
-                    {t.duplicate && <span className="import-page__duplicate-tag"> (já importado)</span>}
+                    {t.duplicate && <span className="import-page__duplicate-tag">já importado</span>}
                   </td>
-                  <td className={t.amount < 0 ? "ledger__amount" : "ledger__amount ledger__amount--income"}>
+                  <td
+                    role="cell"
+                    className={
+                      t.amount < 0
+                        ? "ledger__num ledger__cell--amount ledger__amount"
+                        : "ledger__num ledger__cell--amount ledger__amount ledger__amount--income"
+                    }
+                  >
                     {t.amount < 0 ? "−" : "+"}
                     {formatCurrency(Math.abs(t.amount))}
                   </td>
-                  {hasBalance && <td className="ledger__amount">{t.balanceAfter !== null ? formatCurrency(t.balanceAfter) : ""}</td>}
+                  {hasBalance && (
+                    <td role="cell" className="ledger__num ledger__cell--balance">
+                      {t.balanceAfter !== null && (
+                        <>
+                          <span className="ledger__cell-label">Saldo </span>
+                          {formatCurrency(t.balanceAfter)}
+                        </>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
