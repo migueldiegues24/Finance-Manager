@@ -106,20 +106,6 @@
   border-bottom-color: var(--color-header-accent);
 }
 
-.app-shell__logout {
-  color: var(--color-header-ink);
-  border-color: color-mix(in srgb, var(--color-header-ink) 55%, transparent);
-}
-
-.app-shell__logout:hover {
-  border-color: var(--color-header-ink);
-  background: color-mix(in srgb, var(--color-header-ink) 6%, var(--color-header-bg));
-}
-
-.app-shell__logout:active {
-  background: color-mix(in srgb, var(--color-header-ink) 10%, var(--color-header-bg));
-}
-
 .app-shell__main {
   flex: 1;
   padding-block: var(--space-7) var(--space-8);
@@ -136,7 +122,7 @@
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas:
-      "mark logout"
+      "mark user"
       "nav nav";
     column-gap: var(--space-4);
     min-height: 0;
@@ -149,7 +135,7 @@
   }
 
   .app-shell__user {
-    grid-area: logout;
+    grid-area: user;
   }
 
   /* Navegação numa segunda linha; se não couber, faz scroll horizontal

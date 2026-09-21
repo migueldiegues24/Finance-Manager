@@ -1,12 +1,15 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { API_BASE, loadStoredRefreshToken, setTokens } from "../api/client";
+import { API_BASE, getRefreshToken, loadStoredRefreshToken, revokeRefreshToken, setTokens } from "../api/client";
+import { decodeJwtSubject } from "../utils/jwt";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
   loading: boolean;
+  // Email lido do access token, só para mostrar (ver utils/jwt.ts).
+  email: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -29,6 +32,7 @@ async function requestTokens(path: "login" | "register", email: string, password
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState<string | null>(null);
 
   // Ao carregar a app, se houver um refresh token guardado, tenta trocá-lo
   // por um access token novo, para o utilizador não ter de fazer login outra
@@ -52,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const data = await res.json();
         setTokens(data);
+        setEmail(decodeJwtSubject(data.accessToken));
         setIsAuthenticated(true);
       })
       .finally(() => setLoading(false));
@@ -60,22 +65,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     const data = await requestTokens("login", email, password);
     setTokens(data);
+    setEmail(decodeJwtSubject(data.accessToken));
     setIsAuthenticated(true);
   }
 
   async function register(email: string, password: string) {
     const data = await requestTokens("register", email, password);
     setTokens(data);
+    setEmail(decodeJwtSubject(data.accessToken));
     setIsAuthenticated(true);
   }
 
-  function logout() {
-    setTokens(null);
-    setIsAuthenticated(false);
+  // Tenta revogar o refresh token no servidor (até ~3 s) e limpa sempre a
+  // sessão local, mesmo que o pedido falhe ou não haja rede.
+  async function logout() {
+    const token = getRefreshToken();
+    try {
+      if (token) await revokeRefreshToken(token);
+    } finally {
+      setTokens(null);
+      setEmail(null);
+      setIsAuthenticated(false);
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, loading, email, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

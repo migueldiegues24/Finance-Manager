@@ -1,56 +1,73 @@
 .auth-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-height: 100vh;
+  min-height: 100dvh;
 }
+
+/* ---------- Painel de marca ---------- */
 
 .auth-layout__panel {
-  background: var(--color-panel);
-  color: var(--color-bg);
-  padding: 4rem 3rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: var(--space-7);
+  padding: var(--space-8) clamp(var(--space-6), 5vw, var(--space-8));
+  border-right: 1px solid var(--color-line);
+  background: var(--color-panel);
+  color: var(--color-panel-ink);
 }
 
-.auth-layout__mark {
+.auth-layout__mark,
+.auth-layout__mobile-mark {
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.auth-layout__panel-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-7);
+  max-width: 26rem;
 }
 
 .auth-layout__headline {
   font-family: var(--font-display);
-  font-size: 2.75rem;
-  line-height: 1.15;
-  max-width: 12ch;
+  font-size: clamp(1.8rem, 1.2rem + 1.6vw, 2.5rem);
   font-weight: 400;
+  line-height: 1.2;
 }
 
-.auth-layout__ledger {
-  font-size: 0.95rem;
+.auth-layout__illustration {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  height: auto;
 }
 
-.auth-layout__ledger-row {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid var(--color-panel-line);
-  padding: 0.55rem 0;
-}
+/* ---------- Formulário ---------- */
 
 .auth-layout__form-side {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: var(--space-7) var(--gutter);
+}
+
+.auth-layout__mobile-mark {
+  display: none;
 }
 
 .auth-form {
   width: 100%;
-  max-width: 360px;
+  max-width: 22.5rem;
 }
 
-.auth-form h2 {
+.auth-form__title {
   font-size: 1.9rem;
   font-weight: 400;
   margin-bottom: var(--space-2);
@@ -58,24 +75,71 @@
 
 .auth-form__subtitle {
   color: var(--color-ink-soft);
-  margin-bottom: var(--space-7);
   font-size: 0.95rem;
+  margin-bottom: var(--space-6);
 }
 
 .auth-field {
   margin-bottom: var(--space-5);
 }
 
+.auth-field__hint {
+  margin-top: var(--space-1);
+}
+
+/* Campo de password com o botão Mostrar/Ocultar dentro da linha. */
+.password-field {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--color-control-line);
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+
+.password-field:hover {
+  border-bottom-color: var(--color-ink);
+}
+
+.password-field:focus-within {
+  border-bottom-color: var(--color-ink);
+  box-shadow: 0 1px 0 0 var(--color-ink);
+}
+
+.password-field__input,
+.password-field__input:hover,
+.password-field__input:focus {
+  flex: 1;
+  min-width: 0;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.password-field__toggle {
+  flex-shrink: 0;
+  padding-right: 0;
+}
+
+/* Estado ligado (password visível): texto a tinta e sublinhado. */
+.password-field__toggle[aria-pressed="true"] {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
+.auth-form__error {
+  margin-bottom: var(--space-4);
+}
+
 .auth-form__submit {
-  margin-top: var(--space-3);
   min-height: 2.9rem;
+  margin-top: var(--space-2);
   font-size: 0.95rem;
 }
 
 .auth-form__switch {
   margin-top: var(--space-5);
-  font-size: 0.85rem;
   color: var(--color-ink-soft);
+  font-size: 0.85rem;
 }
 
 .auth-form__switch a {
@@ -90,27 +154,29 @@
   text-decoration-color: currentColor;
 }
 
+/* ---------- Ecrãs estreitos: só o formulário, com a marca em cima ---------- */
+
 @media (max-width: 860px) {
   .auth-layout {
     grid-template-columns: 1fr;
   }
 
   .auth-layout__panel {
-    gap: var(--space-6);
-    padding: var(--space-6) var(--gutter);
+    display: none;
   }
 
   .auth-layout__form-side {
-    padding: var(--space-7) var(--gutter);
+    justify-content: flex-start;
+    padding-top: var(--space-6);
   }
 
-  .auth-layout__headline {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .auth-layout__ledger {
-    display: none;
+  .auth-layout__mobile-mark {
+    display: block;
+    align-self: stretch;
+    max-width: 22.5rem;
+    width: 100%;
+    margin: 0 auto var(--space-7);
+    padding-bottom: var(--space-3);
+    border-bottom: 3px double var(--color-ink);
   }
 }

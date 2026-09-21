@@ -20,6 +20,28 @@ export function setTokens(tokens: TokenPair | null) {
   }
 }
 
+export function getRefreshToken(): string | null {
+  return refreshToken;
+}
+
+// Revoga o refresh token no servidor (POST /api/auth/logout, público, com o
+// token no corpo). Não usa o access token, por isso não importa se já
+// expirou. Timeout de 3 s; qualquer falha (offline, erro) é ignorada: quem
+// chama limpa sempre a sessão local.
+export async function revokeRefreshToken(token: string, timeoutMs = 3000): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: token }),
+      signal: AbortSignal.timeout(timeoutMs),
+      keepalive: true,
+    });
+  } catch {
+    // Sem rede ou timeout: o token expira sozinho no servidor.
+  }
+}
+
 export function loadStoredRefreshToken(): string | null {
   refreshToken = localStorage.getItem("refreshToken");
   return refreshToken;
