@@ -12,6 +12,8 @@ interface Category {
   id: number;
   name: string;
   defaultCategory: boolean;
+  // #RRGGBB ou null/ausente (cor automática).
+  color?: string | null;
 }
 
 async function fetchCategories(): Promise<Category[]> {
