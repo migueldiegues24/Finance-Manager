@@ -23,6 +23,7 @@ interface ImportSummary {
   filename: string;
   transactionsSaved: number;
   duplicatesSkipped: number;
+  importedAsDuplicate: number;
 }
 
 const BANK_HINTS: Record<Bank, string> = {
@@ -91,10 +92,15 @@ export default function ImportPage() {
     });
   }
 
-  // Duplicados não podem ser selecionados (o servidor ignorá-los-ia).
+  // Marca todos os movimentos novos. Os já importados ficam como estão:
+  // marcá-los é sempre uma escolha explícita, linha a linha.
   function selectAll() {
     if (!transactions) return;
-    setSelected(new Set(transactions.filter((t) => !t.duplicate).map((t) => t.hash)));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      transactions.filter((t) => !t.duplicate).forEach((t) => next.add(t.hash));
+      return next;
+    });
   }
 
   function selectNone() {
@@ -115,13 +121,15 @@ export default function ImportPage() {
         body: JSON.stringify({
           filename,
           bank,
-          transactions: chosen.map(({ date, movementDate, description, amount, balanceAfter, occurrence }) => ({
+          // allowDuplicate: o utilizador marcou de propósito um movimento que já existe.
+          transactions: chosen.map(({ date, movementDate, description, amount, balanceAfter, occurrence, duplicate }) => ({
             date,
             movementDate,
             description,
             amount,
             balanceAfter,
             occurrence,
+            allowDuplicate: duplicate,
           })),
         }),
       });
@@ -143,8 +151,11 @@ export default function ImportPage() {
   }
 
   const hasBalance = transactions?.some((t) => t.balanceAfter !== null) ?? false;
-  const selectable = transactions?.filter((t) => !t.duplicate).length ?? 0;
+  const newCount = transactions?.filter((t) => !t.duplicate).length ?? 0;
+  const duplicateCount = (transactions?.length ?? 0) - newCount;
   const chosen = transactions?.filter((t) => selected.has(t.hash)) ?? [];
+  const chosenDuplicates = chosen.filter((t) => t.duplicate).length;
+  const allNewSelected = chosen.length - chosenDuplicates === newCount;
   const selectedIncome = chosen.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
   const selectedExpenses = chosen.filter((t) => t.amount < 0).reduce((sum, t) => sum - t.amount, 0);
 
@@ -193,7 +204,10 @@ export default function ImportPage() {
         <div className="status status--success import-page__result" role="status">
           <span>
             Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}"
-            {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}.
+            {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}
+            {result.importedAsDuplicate > 0 &&
+              `; ${result.importedAsDuplicate} ${result.importedAsDuplicate === 1 ? "foi importada" : "foram importadas"} de novo como duplicado`}
+            .
           </span>
           <Link className="btn btn--ghost btn--sm" to="/transactions">
             Ver transações
@@ -203,19 +217,28 @@ export default function ImportPage() {
 
       {transactions && (
         <div className="import-page__review">
+          {duplicateCount > 0 && (
+            <p className="status status--attention" role="note">
+              <strong>
+                ⚠ {duplicateCount === 1 ? "1 movimento já existe" : `${duplicateCount} movimentos já existem`}.
+              </strong>{" "}
+              Se {duplicateCount === 1 ? "o marcares, fica duplicado" : "os marcares, ficam duplicados"} e os totais
+              contam duas vezes.
+            </p>
+          )}
           <div className="import-page__toolbar">
             <p className="import-page__count">
               {transactions.length} movimentos
-              {transactions.length > selectable && ` · ${transactions.length - selectable} já importados`}
+              {duplicateCount > 0 && ` · ${duplicateCount} já importados`}
             </p>
             <div className="import-page__select">
               <button
                 type="button"
                 className="btn btn--link"
                 onClick={selectAll}
-                disabled={selectable === 0 || selected.size === selectable}
+                disabled={newCount === 0 || allNewSelected}
               >
-                Selecionar tudo
+                {duplicateCount > 0 ? "Selecionar todos os novos" : "Selecionar tudo"}
               </button>
               <button type="button" className="btn btn--link" onClick={selectNone} disabled={selected.size === 0}>
                 Nenhum
@@ -236,14 +259,21 @@ export default function ImportPage() {
             </thead>
             <tbody role="rowgroup">
               {transactions.map((t) => (
-                <tr role="row" key={t.hash} className={t.duplicate ? "is-duplicate" : undefined}>
+                <tr
+                  role="row"
+                  key={t.hash}
+                  className={t.duplicate ? (selected.has(t.hash) ? "is-duplicate is-forced" : "is-duplicate") : undefined}
+                >
                   <td role="cell" className="ledger__cell--check">
                     <input
                       type="checkbox"
                       checked={selected.has(t.hash)}
-                      disabled={t.duplicate}
                       onChange={() => toggle(t.hash)}
-                      aria-label={`Importar ${t.description} de ${t.date}`}
+                      aria-label={
+                        t.duplicate
+                          ? `Importar de novo ${t.description} de ${t.date} (já importado, ficará duplicado)`
+                          : `Importar ${t.description} de ${t.date}`
+                      }
                     />
                   </td>
                   <td
@@ -255,7 +285,17 @@ export default function ImportPage() {
                   </td>
                   <td role="cell" className="ledger__cell--desc">
                     {t.description}
-                    {t.duplicate && <span className="tag import-page__duplicate-tag">já importado</span>}
+                    {t.duplicate && (
+                      <span
+                        className={
+                          selected.has(t.hash)
+                            ? "tag tag--attention import-page__duplicate-tag"
+                            : "tag import-page__duplicate-tag"
+                        }
+                      >
+                        {selected.has(t.hash) ? "⚠ Já importado · vai duplicar" : "Já importado"}
+                      </span>
+                    )}
                   </td>
                   <td
                     role="cell"
@@ -289,6 +329,11 @@ export default function ImportPage() {
             <div className="app-shell__inner import-bar__inner">
               <p className="import-bar__summary" aria-live="polite">
                 <strong>{selected.size} selecionados</strong>
+                {chosenDuplicates > 0 && (
+                  <span className="import-bar__duplicates">
+                    ⚠ incl. {chosenDuplicates} já {chosenDuplicates === 1 ? "importado" : "importados"}
+                  </span>
+                )}
                 <span className="import-bar__totals">
                   <span className="ledger__amount ledger__amount--income">+{formatCurrency(selectedIncome)}</span>
                   <span className="ledger__amount">−{formatCurrency(selectedExpenses)}</span>
