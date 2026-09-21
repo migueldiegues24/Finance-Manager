@@ -363,6 +363,18 @@ test("renovação que encontra no armazenamento a sessão de outro utilizador n�
   assert.deepEqual(events, ["user-changed"]);
 });
 
+test("logout durante uma renovação em curso não repõe a sessão", async () => {
+  const storage = memoryStorage({ [TOKENS_KEY]: stored(expired(), "rt-0") });
+  const server = fakeServer();
+  const { session } = manager(storage, server);
+
+  const pending = session.refresh();
+  session.clear();
+  await assert.rejects(pending, SessionEndedError);
+  assert.equal(session.hasSession(), false);
+  assert.equal(storage.data.has(TOKENS_KEY), false);
+});
+
 test("os erros não expõem tokens", async () => {
   const storage = memoryStorage({ [TOKENS_KEY]: stored(expired(), "rt-0") });
   const server = fakeServer();

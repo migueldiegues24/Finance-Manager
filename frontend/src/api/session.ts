@@ -99,6 +99,9 @@ export function createSessionManager(deps: SessionDeps) {
   const { storage, refreshRequest, locks = null, now = Date.now } = deps;
   let current: StoredTokens | null = null;
   let inflight: Promise<StoredTokens> | null = null;
+  // Muda a cada login, logout ou fim de sessão: uma renovação que termine
+  // depois disso já não pode repor tokens (ressuscitar a sessão).
+  let generation = 0;
   const listeners = new Set<(event: SessionEvent) => void>();
 
   function emit(event: SessionEvent) {
@@ -146,6 +149,7 @@ export function createSessionManager(deps: SessionDeps) {
   }
 
   function end() {
+    generation++;
     current = null;
     writeStorage(null);
     emit("ended");
@@ -181,12 +185,15 @@ export function createSessionManager(deps: SessionDeps) {
     }
     if (isOtherUser(latest)) return adopt(latest);
 
+    const startedAt = generation;
     let response: RefreshResponse;
     try {
       response = await refreshRequest(latest.refreshToken);
     } catch {
       throw new SessionUnavailableError();
     }
+
+    if (startedAt !== generation) throw new SessionEndedError();
 
     if (response.status === 400 || response.status === 401) {
       // Se outro separador já rodou o token, o 400 é esperado: adota o par mais novo.
@@ -204,6 +211,7 @@ export function createSessionManager(deps: SessionDeps) {
       throw new SessionUnavailableError();
     }
     if (!isTokenPair(body)) throw new SessionUnavailableError();
+    if (startedAt !== generation) throw new SessionEndedError();
 
     const tokens = { accessToken: body.accessToken, refreshToken: body.refreshToken };
     writeStorage(tokens);
@@ -251,12 +259,14 @@ export function createSessionManager(deps: SessionDeps) {
 
     // Login ou registo neste separador.
     setTokens(tokens: TokenPair) {
+      generation++;
       current = { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
       writeStorage(current);
     },
 
     // Logout neste separador; os outros recebem o evento storage e saem também.
     clear() {
+      generation++;
       current = null;
       writeStorage(null);
     },
@@ -266,6 +276,7 @@ export function createSessionManager(deps: SessionDeps) {
       if (key !== null && key !== TOKENS_KEY) return;
       const next = parseStoredTokens(key === null ? null : newValue);
       if (!next) {
+        generation++;
         if (current) {
           current = null;
           emit("ended");
