@@ -4,7 +4,7 @@
   flex-direction: column;
 }
 
-/* Container comum: o interior do cabeçalho e o conteúdo alinham pelas mesmas margens. */
+/* Container do conteúdo (880px, centrado). O cabeçalho não o usa. */
 .app-shell__inner {
   width: 100%;
   max-width: var(--container);
@@ -20,7 +20,12 @@
   --color-focus: var(--color-header-ink);
 }
 
+/* O interior do cabeçalho ocupa a largura toda da página, só com o
+   --gutter lateral: marca e navegação encostadas à esquerda, zona do
+   utilizador à direita. */
 .app-shell__bar {
+  width: 100%;
+  padding-inline: var(--gutter);
   display: flex;
   align-items: stretch;
   justify-content: space-between;
