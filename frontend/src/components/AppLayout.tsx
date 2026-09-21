@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, NavLink, useSearchParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import UserMenu from "./UserMenu";
 import "./AppLayout.css";
 
 // keepMonth: páginas que partilham o mês selecionado (?month=YYYY-MM).
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { logout } = useAuth();
   const [searchParams] = useSearchParams();
   const month = searchParams.get("month");
 
@@ -37,11 +36,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               ))}
             </nav>
           </div>
-          {/* Zona do utilizador: por agora só "Sair"; mais tarde conta, definições e tema. */}
+          {/* Zona do utilizador: menu com email, tema e "Sair". */}
           <div className="app-shell__user">
-            <button className="btn btn--sm app-shell__logout" onClick={logout}>
-              Sair
-            </button>
+            <UserMenu />
           </div>
         </div>
       </header>
