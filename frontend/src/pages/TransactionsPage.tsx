@@ -3,7 +3,6 @@ import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
 import { formatCurrency } from "../utils/format";
 import { currentMonth, shiftMonth, formatMonthLabel } from "../utils/date";
-import "./DashboardPage.css";
 import "./TransactionsPage.css";
 
 interface Transaction {
@@ -78,22 +77,35 @@ export default function TransactionsPage() {
 
   return (
     <AppLayout>
-      <div className="dashboard__month-nav">
-        <button onClick={() => setMonth((m) => shiftMonth(m, -1))} aria-label="Mês anterior">
-          ‹
-        </button>
-        <h1>{formatMonthLabel(month)}</h1>
-        <button onClick={() => setMonth((m) => shiftMonth(m, 1))} aria-label="Mês seguinte">
-          ›
-        </button>
-      </div>
+      <header className="page-header">
+        <p className="page-header__eyebrow">Movimentos do mês</p>
+        <div className="month-nav">
+          <h1 className="page-header__title month-nav__title">{formatMonthLabel(month)}</h1>
+          <div className="month-nav__controls">
+            <button
+              className="btn btn--ghost month-nav__btn"
+              onClick={() => setMonth((m) => shiftMonth(m, -1))}
+              aria-label="Mês anterior"
+            >
+              ‹
+            </button>
+            <button
+              className="btn btn--ghost month-nav__btn"
+              onClick={() => setMonth((m) => shiftMonth(m, 1))}
+              aria-label="Mês seguinte"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </header>
 
-      {loading && <p className="dashboard__status">A carregar…</p>}
-      {error && <p className="dashboard__status dashboard__status--error">{error}</p>}
+      {loading && <p className="status" role="status">A carregar…</p>}
+      {error && <p className="status status--error" role="alert">{error}</p>}
 
       {!loading && !error && (
         transactions.length === 0 ? (
-          <p className="dashboard__status">Sem transações neste mês.</p>
+          <p className="status">Sem transações neste mês.</p>
         ) : (
           <table className="ledger ledger--stack transactions-table" role="table">
             <thead role="rowgroup">

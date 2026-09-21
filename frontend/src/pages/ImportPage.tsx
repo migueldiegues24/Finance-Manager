@@ -135,36 +135,47 @@ export default function ImportPage() {
 
   return (
     <AppLayout>
-      <h1 className="import-page__title">Importar extrato</h1>
-      <p className="import-page__subtitle">{BANK_HINTS[bank]}</p>
+      <header className="page-header">
+        <p className="page-header__eyebrow">Importação</p>
+        <h1 className="page-header__title">Importar extrato</h1>
+        <p className="page-header__subtitle">{BANK_HINTS[bank]}</p>
+      </header>
 
       <form className="import-page__upload" onSubmit={handleAnalyze}>
+        <label className="visually-hidden" htmlFor="import-bank">
+          Banco
+        </label>
         <select
-          className="import-page__bank"
+          id="import-bank"
+          className="field import-page__bank"
           value={bank}
           onChange={(event) => {
             setBank(event.target.value as Bank);
             setTransactions(null);
             setResult(null);
           }}
-          aria-label="Banco"
         >
           <option value="CGD">CGD</option>
           <option value="GENERIC">CSV genérico</option>
         </select>
-        <label className="import-page__file-label">
-          {file ? file.name : "Escolher ficheiro"}
-          <input type="file" accept=".csv,.xls,text/csv" onChange={handleFileChange} hidden />
+        <label className="btn btn--ghost import-page__file-label">
+          <span className="import-page__file-name">{file ? file.name : "Escolher ficheiro"}</span>
+          <input
+            className="visually-hidden"
+            type="file"
+            accept=".csv,.xls,text/csv"
+            onChange={handleFileChange}
+          />
         </label>
-        <button type="submit" disabled={!file || analyzing}>
+        <button className="btn btn--primary" type="submit" disabled={!file || analyzing}>
           {analyzing ? "A analisar…" : "Analisar"}
         </button>
       </form>
 
-      {error && <p className="dashboard__status dashboard__status--error">{error}</p>}
+      {error && <p className="status status--error" role="alert">{error}</p>}
 
       {result && (
-        <p className="import-page__result">
+        <p className="status status--success" role="status">
           Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}"
           {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}.
         </p>
@@ -172,6 +183,9 @@ export default function ImportPage() {
 
       {transactions && (
         <>
+          <p className="import-page__count">
+            {transactions.length} movimentos · {selected.size} selecionados
+          </p>
           <table className="ledger ledger--stack import-table" role="table">
             <thead role="rowgroup">
               <tr role="row">
@@ -234,7 +248,7 @@ export default function ImportPage() {
           </table>
 
           <button
-            className="import-page__confirm"
+            className="btn btn--primary import-page__confirm"
             onClick={handleConfirm}
             disabled={confirming || selected.size === 0}
           >

@@ -48,6 +48,31 @@
   margin-bottom: var(--space-5);
 }
 
+/* ---------- Navegação por mês ---------- */
+
+/* As setas ficam agrupadas à direita, para não mudarem de sítio quando
+   o nome do mês muda de comprimento. */
+.month-nav {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.month-nav__controls {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.month-nav__btn {
+  width: 2.5rem;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
 /* ---------- Botões ---------- */
 
 .btn {

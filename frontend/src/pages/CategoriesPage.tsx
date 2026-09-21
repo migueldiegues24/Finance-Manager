@@ -161,114 +161,149 @@ export default function CategoriesPage() {
   if (loading) {
     return (
       <AppLayout>
-        <p className="dashboard__status">A carregar…</p>
+        <p className="status" role="status">A carregar…</p>
       </AppLayout>
     );
   }
 
   return (
     <AppLayout>
-      <h1 className="categories-page__title">Categorias</h1>
+      <header className="page-header">
+        <p className="page-header__eyebrow">Configuração</p>
+        <h1 className="page-header__title">Categorias e regras</h1>
+      </header>
 
-      {error && <p className="dashboard__status dashboard__status--error">{error}</p>}
+      {error && <p className="status status--error" role="alert">{error}</p>}
 
-      <table className="ledger">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((category) => (
-            <tr key={category.id}>
-              <td>
-                {editingId === category.id ? (
-                  <input
-                    className="categories-page__inline-input"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    autoFocus
-                  />
-                ) : (
-                  category.name
-                )}
-              </td>
-              <td className="categories-page__actions">
-                {category.defaultCategory ? (
-                  <span className="categories-page__protected">protegida</span>
-                ) : editingId === category.id ? (
-                  <>
-                    <button onClick={() => saveEditing(category.id)}>Guardar</button>
-                    <button onClick={() => setEditingId(null)}>Cancelar</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => startEditing(category)}>Editar</button>
-                    <button onClick={() => deleteCategory(category.id)}>Apagar</button>
-                  </>
-                )}
-              </td>
+      <section aria-labelledby="categories-title">
+        <h2 className="section__title" id="categories-title">Categorias</h2>
+        <p className="section__subtitle">As categorias protegidas não podem ser renomeadas nem apagadas.</p>
+
+        <table className="ledger">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>
+                <span className="visually-hidden">Ações</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {categories.map((category) => (
+              <tr key={category.id}>
+                <td>
+                  {editingId === category.id ? (
+                    <input
+                      className="field categories-page__inline-input"
+                      aria-label="Nome da categoria"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      autoFocus
+                    />
+                  ) : (
+                    category.name
+                  )}
+                </td>
+                <td className="categories-page__actions">
+                  {category.defaultCategory ? (
+                    <span className="categories-page__protected">protegida</span>
+                  ) : editingId === category.id ? (
+                    <>
+                      <button className="btn btn--link" onClick={() => saveEditing(category.id)}>
+                        Guardar
+                      </button>
+                      <button className="btn btn--link" onClick={() => setEditingId(null)}>
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="btn btn--link" onClick={() => startEditing(category)}>
+                        Editar
+                      </button>
+                      <button className="btn btn--link btn--danger" onClick={() => deleteCategory(category.id)}>
+                        Apagar
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <form className="categories-page__form" onSubmit={handleCreateCategory}>
-        <input
-          placeholder="Nova categoria"
-          value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
-        />
-        <button type="submit" disabled={creatingCategory || !newCategoryName.trim()}>
-          {creatingCategory ? "A criar…" : "Criar categoria"}
-        </button>
-      </form>
+        <form className="categories-page__form" onSubmit={handleCreateCategory}>
+          <input
+            className="field"
+            aria-label="Nova categoria"
+            placeholder="Nova categoria"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+          />
+          <button className="btn btn--primary" type="submit" disabled={creatingCategory || !newCategoryName.trim()}>
+            {creatingCategory ? "A criar…" : "Criar categoria"}
+          </button>
+        </form>
 
-      <h1 className="categories-page__title categories-page__title--rules">Regras de categorização</h1>
-      <p className="import-page__subtitle">
-        Quando uma transação importada contém a palavra-chave, é atribuída automaticamente à categoria.
-      </p>
+      </section>
 
-      <table className="ledger">
-        <thead>
-          <tr>
-            <th>Palavra-chave</th>
-            <th>Categoria</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rules.map((rule) => (
-            <tr key={rule.id}>
-              <td>{rule.keyword}</td>
-              <td>{rule.categoryName}</td>
-              <td className="categories-page__actions">
-                <button onClick={() => deleteRule(rule.id)}>Apagar</button>
-              </td>
+      <section className="section" aria-labelledby="rules-title">
+        <h2 className="section__title" id="rules-title">Regras de categorização</h2>
+        <p className="section__subtitle">
+          Quando uma transação importada contém a palavra-chave, é atribuída automaticamente à categoria.
+          Maiúsculas e acentos são ignorados.
+        </p>
+
+        <table className="ledger">
+          <thead>
+            <tr>
+              <th>Palavra-chave</th>
+              <th>Categoria</th>
+              <th>
+                <span className="visually-hidden">Ações</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rules.map((rule) => (
+              <tr key={rule.id}>
+                <td>{rule.keyword}</td>
+                <td>{rule.categoryName}</td>
+                <td className="categories-page__actions">
+                  <button className="btn btn--link btn--danger" onClick={() => deleteRule(rule.id)}>
+                    Apagar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <form className="categories-page__form" onSubmit={handleCreateRule}>
-        <input
-          placeholder="Palavra-chave"
-          value={newRuleKeyword}
-          onChange={(e) => setNewRuleKeyword(e.target.value)}
-        />
-        <select value={newRuleCategoryId} onChange={(e) => setNewRuleCategoryId(e.target.value)}>
-          <option value="">Categoria…</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <button type="submit" disabled={creatingRule || !newRuleKeyword.trim() || !newRuleCategoryId}>
-          {creatingRule ? "A criar…" : "Criar regra"}
-        </button>
-      </form>
+        <form className="categories-page__form" onSubmit={handleCreateRule}>
+          <input
+            className="field"
+            aria-label="Palavra-chave"
+            placeholder="Palavra-chave"
+            value={newRuleKeyword}
+            onChange={(e) => setNewRuleKeyword(e.target.value)}
+          />
+          <select className="field" aria-label="Categoria da regra" value={newRuleCategoryId} onChange={(e) => setNewRuleCategoryId(e.target.value)}>
+            <option value="">Categoria…</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn btn--primary"
+            type="submit"
+            disabled={creatingRule || !newRuleKeyword.trim() || !newRuleCategoryId}
+          >
+            {creatingRule ? "A criar…" : "Criar regra"}
+          </button>
+        </form>
+      </section>
     </AppLayout>
   );
 }

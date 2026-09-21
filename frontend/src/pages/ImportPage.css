@@ -1,57 +1,29 @@
-.import-page__title {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 400;
-  margin-bottom: 0.5rem;
-}
-
-.import-page__subtitle {
-  color: var(--color-ink-soft);
-  font-size: 0.9rem;
-  margin: 0 0 2rem;
-}
-
 .import-page__upload {
   display: flex;
-  gap: 1rem;
-  align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 2.5rem;
-}
-
-.import-page__file-label {
-  border: 1px solid var(--color-line);
-  padding: 0.65rem 1.1rem;
-  cursor: pointer;
-  font-size: 0.9rem;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-7);
 }
 
 .import-page__bank {
-  border: 1px solid var(--color-line);
-  background: transparent;
-  color: inherit;
-  padding: 0.65rem 0.9rem;
-  font: inherit;
-  font-size: 0.9rem;
+  width: auto;
+  min-width: 10rem;
 }
 
-.import-page__upload button {
-  background: var(--color-ink);
-  color: var(--color-bg);
-  border: none;
-  padding: 0.65rem 1.3rem;
-  cursor: pointer;
-  font-size: 0.9rem;
+.import-page__file-label {
+  max-width: 100%;
 }
 
-.import-page__upload button:disabled {
-  opacity: 0.5;
-  cursor: default;
+.import-page__file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.import-page__result {
-  color: var(--color-income);
-  margin-bottom: 2rem;
+.import-page__count {
+  margin-bottom: var(--space-3);
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
 }
 
 .import-page__duplicate-tag {
@@ -77,7 +49,19 @@
   accent-color: var(--color-ink);
 }
 
+.import-page__confirm {
+  margin-top: var(--space-5);
+}
+
 @media (max-width: 640px) {
+  .import-page__upload > * {
+    flex: 1 1 100%;
+  }
+
+  .import-page__bank {
+    min-width: 0;
+  }
+
   .import-table tbody tr {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
@@ -88,19 +72,8 @@
   .import-table input[type="checkbox"] {
     margin-top: 0.3rem;
   }
-}
 
-.import-page__confirm {
-  margin-top: 1.5rem;
-  background: var(--color-ink);
-  color: var(--color-bg);
-  border: none;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.import-page__confirm:disabled {
-  opacity: 0.5;
-  cursor: default;
+  .import-page__confirm {
+    width: 100%;
+  }
 }
