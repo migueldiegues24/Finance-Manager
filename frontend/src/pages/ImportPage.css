@@ -58,8 +58,10 @@
   margin-left: var(--space-2);
 }
 
-.import-table .is-duplicate .ledger__cell--desc,
-.import-table .is-duplicate .ledger__cell--amount {
+/* Já importado e não marcado: esbatido. Marcado de propósito: volta à cor
+   normal, com a etiqueta de aviso a explicar que vai duplicar. */
+.import-table .is-duplicate:not(.is-forced) .ledger__cell--desc,
+.import-table .is-duplicate:not(.is-forced) .ledger__cell--amount {
   color: var(--color-ink-soft);
 }
 
@@ -110,6 +112,11 @@
   align-items: baseline;
   gap: var(--space-1) var(--space-4);
   font-variant-numeric: tabular-nums;
+}
+
+.import-bar__duplicates {
+  color: var(--color-attention);
+  font-size: 0.85rem;
 }
 
 .import-bar__totals {

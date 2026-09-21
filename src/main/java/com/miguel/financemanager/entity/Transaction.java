@@ -8,7 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions",
+        uniqueConstraints = @UniqueConstraint(name = "uq_transactions_user_hash", columnNames = {"user_id", "hash"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,8 +51,8 @@ public class Transaction {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    // Fingerprint de deduplicação (ver TransactionFingerprint). O confirm
-    // ignora movimentos cujo hash já existe para o utilizador.
+    // Fingerprint de deduplicação (ver TransactionFingerprint). Único por
+    // utilizador (índice uq_transactions_user_hash, migração V4).
     @Column(nullable = false, length = 64)
     private String hash;
 

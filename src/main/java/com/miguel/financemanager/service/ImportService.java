@@ -1,46 +1,36 @@
 package com.miguel.financemanager.service;
 
 import com.miguel.financemanager.dto.ConfirmImportRequest;
-import com.miguel.financemanager.dto.ConfirmTransactionRequest;
 import com.miguel.financemanager.dto.ImportSummaryResponse;
 import com.miguel.financemanager.dto.ParseImportResponse;
 import com.miguel.financemanager.dto.ParsedTransactionResponse;
-import com.miguel.financemanager.entity.Category;
-import com.miguel.financemanager.entity.CategorizationRule;
-import com.miguel.financemanager.entity.StatementImport;
-import com.miguel.financemanager.entity.Transaction;
 import com.miguel.financemanager.entity.User;
-import com.miguel.financemanager.repository.CategorizationRuleRepository;
-import com.miguel.financemanager.repository.CategoryRepository;
-import com.miguel.financemanager.repository.StatementImportRepository;
+import com.miguel.financemanager.exception.ImportConflictException;
 import com.miguel.financemanager.repository.TransactionRepository;
 import com.miguel.financemanager.service.parsing.Bank;
 import com.miguel.financemanager.service.parsing.ParsedTransaction;
 import com.miguel.financemanager.service.parsing.StatementParserRegistry;
-import com.miguel.financemanager.service.util.DescriptionNormalizer;
 import com.miguel.financemanager.service.util.TransactionFingerprint;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImportService {
 
     private final StatementParserRegistry parserRegistry;
     private final TransactionRepository transactionRepository;
-    private final StatementImportRepository statementImportRepository;
-    private final CategoryRepository categoryRepository;
-    private final CategorizationRuleRepository ruleRepository;
+    private final ImportWriter importWriter;
     private final CurrentUserService currentUserService;
 
     // Não persiste nada. O frontend mostra esta lista numa página de
@@ -71,79 +61,23 @@ public class ImportService {
         return new ParseImportResponse(file.getOriginalFilename(), response);
     }
 
-    @Transactional
+    // Sem @Transactional de propósito: cada tentativa corre numa transação
+    // própria dentro do ImportWriter. Se outro confirm gravar os mesmos
+    // movimentos ao mesmo tempo, a primeira tentativa viola o índice único e
+    // é revertida por inteiro; a segunda já vê essas linhas e ignora-as.
     public ImportSummaryResponse confirmImport(ConfirmImportRequest request) {
         User user = currentUserService.getCurrentUser();
-
-        StatementImport statementImport = StatementImport.builder()
-                .user(user)
-                .filename(request.getFilename())
-                .bank(request.getBank() != null ? request.getBank() : Bank.GENERIC)
-                .build();
-        statementImportRepository.save(statementImport);
-
-        List<CategorizationRule> rules = ruleRepository.findByUserOrderByPriorityAsc(user);
-        Category fallback = resolveFallbackCategory(user);
-
-        int saved = 0;
-        int skipped = 0;
-        Set<String> hashesInRequest = new HashSet<>();
-        for (ConfirmTransactionRequest t : request.getTransactions()) {
-            String hash = TransactionFingerprint.compute(user.getId(), t.getDate(), t.getMovementDate(),
-                    t.getDescription(), t.getAmount(), t.getBalanceAfter(), t.getOccurrence());
-
-            // Movimentos idênticos legítimos chegam com ocorrências diferentes;
-            // o mesmo hash duas vezes só acontece se o pedido estiver mal formado.
-            if (!hashesInRequest.add(hash)) {
-                throw new IllegalArgumentException("Movimento repetido no pedido: " + t.getDate() + " "
-                        + t.getDescription() + " " + t.getAmount() + " (ocorrência " + t.getOccurrence() + ")");
-            }
-            if (transactionRepository.existsByUserAndHash(user, hash)) {
-                skipped++;
-                continue;
-            }
-
-            Category category = resolveCategory(t.getDescription(), rules, fallback);
-
-            Transaction transaction = Transaction.builder()
-                    .user(user)
-                    .statementImport(statementImport)
-                    .transactionDate(t.getDate())
-                    .movementDate(t.getMovementDate())
-                    .description(t.getDescription())
-                    .amount(t.getAmount())
-                    .balanceAfter(t.getBalanceAfter())
-                    .category(category)
-                    .hash(hash)
-                    .build();
-
-            transactionRepository.save(transaction);
-            saved++;
-        }
-
-        return new ImportSummaryResponse(statementImport.getId(), statementImport.getFilename(), saved, skipped);
-    }
-
-    // Percorre as regras por prioridade e devolve a primeira categoria cuja
-    // keyword está contida na descrição, comparando ambas normalizadas
-    // (maiúsculas, sem acentos, espaços colapsados). Sem correspondência, usa o fallback.
-    private Category resolveCategory(String description, List<CategorizationRule> rules, Category fallback) {
-        String normalizedDescription = DescriptionNormalizer.normalize(description);
-        for (CategorizationRule rule : rules) {
-            if (normalizedDescription.contains(DescriptionNormalizer.normalize(rule.getKeyword()))) {
-                return rule.getCategory();
+        try {
+            return importWriter.write(user, request);
+        } catch (DataIntegrityViolationException first) {
+            log.info("Conflito ao gravar a importação do utilizador {}; a repetir", user.getId());
+            try {
+                return importWriter.write(user, request);
+            } catch (DataIntegrityViolationException second) {
+                throw new ImportConflictException(
+                        "Outra importação gravou os mesmos movimentos ao mesmo tempo. Tenta de novo.", second);
             }
         }
-        return fallback;
-    }
-
-    // "Outros" é o fallback normal, mas não é protegida, o utilizador pode
-    // apagá-la. Se isso acontecer, cai para "Sem Categoria", que é garantida.
-    private Category resolveFallbackCategory(User user) {
-        return categoryRepository.findByUserAndName(user, "Outros")
-                .orElseGet(() -> categoryRepository.findByUserAndIsDefaultTrue(user)
-                        .orElseThrow(() -> new IllegalStateException(
-                                "Nenhuma categoria fallback encontrada para o utilizador")));
     }
 
     private String fingerprint(User user, ParsedTransaction t, int occurrence) {
