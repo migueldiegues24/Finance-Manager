@@ -31,12 +31,14 @@ export default function RegisterPage() {
         <h2>Criar conta</h2>
         <p className="auth-form__subtitle">Começa a organizar as tuas despesas por categoria.</p>
 
-        {error && <p className="auth-form__error">{error}</p>}
+        {error && <p className="status status--error" role="alert">{error}</p>}
 
         <div className="auth-field">
-          <label htmlFor="email">Email</label>
+          <label className="field-label" htmlFor="email">Email</label>
           <input
             id="email"
+            className="field"
+            autoComplete="email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -45,9 +47,11 @@ export default function RegisterPage() {
         </div>
 
         <div className="auth-field">
-          <label htmlFor="password">Password</label>
+          <label className="field-label" htmlFor="password">Password</label>
           <input
             id="password"
+            className="field"
+            autoComplete="new-password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -56,7 +60,7 @@ export default function RegisterPage() {
           />
         </div>
 
-        <button className="auth-form__submit" type="submit" disabled={submitting}>
+        <button className="btn btn--primary btn--block auth-form__submit" type="submit" disabled={submitting}>
           {submitting ? "A criar…" : "Criar conta"}
         </button>
 
