@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
 import { useAuth } from "../context/AuthContext";
+import Notice from "../components/Notice";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -19,7 +20,7 @@ export default function LoginPage() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
+      setError(err instanceof Error ? err.message : "Algo correu mal. Tenta de novo.");
     } finally {
       setSubmitting(false);
     }
@@ -31,7 +32,7 @@ export default function LoginPage() {
         <h2>Entrar</h2>
         <p className="auth-form__subtitle">Continua a acompanhar as tuas contas.</p>
 
-        {error && <p className="status status--error" role="alert">{error}</p>}
+        {error && <Notice tone="error" title={error} />}
 
         <div className="auth-field">
           <label className="field-label" htmlFor="email">Email</label>

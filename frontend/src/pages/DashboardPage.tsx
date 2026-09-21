@@ -8,6 +8,8 @@ import { useMonthParam } from "../hooks/useMonthParam";
 import { categoryStyle } from "../utils/categoryColor";
 import { formatCurrency } from "../utils/format";
 import "./DashboardPage.css";
+import Notice from "../components/Notice";
+import { AppError, toNotice, type NoticeContent } from "../api/errors";
 
 interface CategoryTotal {
   categoryId: number;
@@ -31,10 +33,12 @@ interface Category {
 
 const percentFormat = new Intl.NumberFormat("pt-PT", { style: "percent", maximumFractionDigits: 0 });
 
-function netCaption(net: number): string {
-  if (net > 0) return "Entrou mais do que saiu";
-  if (net < 0) return "Saiu mais do que entrou";
-  return "Entradas e saídas equilibradas";
+// Cor do balanço: verde se positivo, vermelho se negativo, tinta se zero.
+// O sinal (+/−) acompanha sempre a cor.
+function netTone(net: number): "positive" | "negative" | "zero" {
+  if (net > 0) return "positive";
+  if (net < 0) return "negative";
+  return "zero";
 }
 
 export default function DashboardPage() {
@@ -42,7 +46,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [uncategorizedId, setUncategorizedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,7 +55,7 @@ export default function DashboardPage() {
 
     Promise.all([apiFetch(`/dashboard/summary?month=${month}`), apiFetch("/categories")])
       .then(async ([summaryRes, categoriesRes]) => {
-        if (!summaryRes.ok || !categoriesRes.ok) throw new Error("Não foi possível carregar o resumo");
+        if (!summaryRes.ok || !categoriesRes.ok) throw new AppError("Não foi possível carregar o resumo.");
         const [data, categories]: [DashboardSummary, Category[]] = await Promise.all([
           summaryRes.json(),
           categoriesRes.json(),
@@ -62,7 +66,7 @@ export default function DashboardPage() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Algo correu mal");
+        if (!cancelled) setError(toNotice(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -82,37 +86,32 @@ export default function DashboardPage() {
         <MonthNav month={month} onChange={setMonth} />
       </header>
 
-      {loading && <p className="status" role="status">A carregar…</p>}
-      {error && <p className="status status--error" role="alert">{error}</p>}
+      {loading && <Notice title="A carregar…" />}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} />}
 
       {summary && !loading && !error && isEmpty && <EmptyMonth month={month} onChange={setMonth} />}
 
       {summary && !loading && !error && !isEmpty && (
         <>
-          <section className="summary-cards" aria-label="Resumo do mês">
-            <div className="summary-card summary-card--income">
-              <p className="summary-card__label">Receitas</p>
-              <p className="summary-card__value ledger__amount ledger__amount--income">
-                +{formatCurrency(summary.totalIncome)}
-              </p>
-            </div>
-            <div className="summary-card summary-card--expense">
-              <p className="summary-card__label">Despesas</p>
-              <p className="summary-card__value ledger__amount">−{formatCurrency(summary.totalExpenses)}</p>
-            </div>
-            <div className="summary-card summary-card--net">
+          <section className="summary" aria-label="Resumo do mês">
+            <div className={`summary-card summary-card--net summary-card--${netTone(summary.net)}`}>
               <p className="summary-card__label">Balanço do mês</p>
-              <p
-                className={
-                  summary.net < 0
-                    ? "summary-card__value ledger__amount"
-                    : "summary-card__value ledger__amount ledger__amount--income"
-                }
-              >
-                {summary.net < 0 ? "−" : "+"}
+              <p className="summary-card__value summary-card__value--hero">
+                {summary.net > 0 ? "+" : summary.net < 0 ? "−" : ""}
                 {formatCurrency(Math.abs(summary.net))}
               </p>
-              <p className="summary-card__caption">{netCaption(summary.net)}</p>
+            </div>
+            <div className="summary__secondary">
+              <div className="summary-card summary-card--income">
+                <p className="summary-card__label">Receitas</p>
+                <p className="summary-card__value ledger__amount ledger__amount--income">
+                  +{formatCurrency(summary.totalIncome)}
+                </p>
+              </div>
+              <div className="summary-card summary-card--expense">
+                <p className="summary-card__label">Despesas</p>
+                <p className="summary-card__value ledger__amount">−{formatCurrency(summary.totalExpenses)}</p>
+              </div>
             </div>
           </section>
 
@@ -122,7 +121,7 @@ export default function DashboardPage() {
             </h2>
 
             {summary.totals.length === 0 ? (
-              <p className="status">Sem despesas registadas neste mês.</p>
+              <Notice title="Sem despesas este mês." />
             ) : (
               <table className="ledger dashboard__table">
                 <thead>
@@ -169,8 +168,7 @@ export default function DashboardPage() {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td>Total das despesas</td>
-                    <td />
+                    <td colSpan={2}>Total</td>
                     <td className="ledger__num ledger__amount">−{formatCurrency(summary.overallTotal)}</td>
                   </tr>
                 </tfoot>

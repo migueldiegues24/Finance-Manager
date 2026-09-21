@@ -8,6 +8,8 @@ import { useMonthParam } from "../hooks/useMonthParam";
 import { categoryStyle } from "../utils/categoryColor";
 import { formatCurrency } from "../utils/format";
 import "./TransactionsPage.css";
+import Notice from "../components/Notice";
+import { AppError, apiFailure, toNotice, type NoticeContent } from "../api/errors";
 
 interface Transaction {
   id: number;
@@ -31,7 +33,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function TransactionsPage() {
 
     Promise.all([apiFetch(`/transactions?month=${month}`), apiFetch("/categories")])
       .then(async ([txRes, catRes]) => {
-        if (!txRes.ok || !catRes.ok) throw new Error("Não foi possível carregar as transações");
+        if (!txRes.ok || !catRes.ok) throw new AppError("Não foi possível carregar as transações.");
         const [txData, catData] = await Promise.all([txRes.json(), catRes.json()]);
         if (!cancelled) {
           setTransactions(txData);
@@ -49,7 +51,7 @@ export default function TransactionsPage() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Algo correu mal");
+        if (!cancelled) setError(toNotice(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -69,13 +71,12 @@ export default function TransactionsPage() {
         body: JSON.stringify({ categoryId: Number(categoryId) }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Não foi possível atualizar a categoria");
+        throw await apiFailure(res, "Não foi possível mudar a categoria.");
       }
       const updated: Transaction = await res.json();
       setTransactions((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
+      setError(toNotice(err));
     } finally {
       setSavingId(null);
     }
@@ -104,37 +105,44 @@ export default function TransactionsPage() {
         <MonthNav month={month} onChange={setMonth} />
       </header>
 
-      {loading && <p className="status" role="status">A carregar…</p>}
-      {error && <p className="status status--error" role="alert">{error}</p>}
+      {loading && <Notice title="A carregar…" />}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} />}
 
       {!loading && !error && transactions.length === 0 && <EmptyMonth month={month} onChange={setMonth} />}
 
       {!loading && !error && transactions.length > 0 && (
         <>
           {uncategorizedCount > 0 && (
-            <div className="status status--attention transactions-page__notice">
-              <span>
-                <strong>⚠ {uncategorizedCount === 1 ? "1 movimento" : `${uncategorizedCount} movimentos`} sem categoria</strong>
-                {onlyUncategorized ? " — a mostrar só estes." : " neste mês."}
-              </span>
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm"
-                onClick={() => setOnlyUncategorized(!onlyUncategorized)}
-                aria-pressed={onlyUncategorized}
-              >
-                {onlyUncategorized ? "Mostrar todos" : "Mostrar só estes"}
-              </button>
-            </div>
+            <Notice
+              tone="attention"
+              title={
+                onlyUncategorized
+                  ? `⚠ A mostrar ${uncategorizedCount === 1 ? "o único" : `os ${uncategorizedCount}`} sem categoria.`
+                  : `⚠ ${uncategorizedCount} sem categoria.`
+              }
+              action={
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => setOnlyUncategorized(!onlyUncategorized)}
+                  aria-pressed={onlyUncategorized}
+                >
+                  {onlyUncategorized ? "Mostrar todos" : uncategorizedCount === 1 ? "Mostrar só este" : "Mostrar só estes"}
+                </button>
+              }
+            />
           )}
 
           {onlyUncategorized && uncategorizedCount === 0 && (
-            <div className="status status--success transactions-page__notice" role="status">
-              <span>Todos os movimentos deste mês têm categoria.</span>
-              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setOnlyUncategorized(false)}>
-                Mostrar todos
-              </button>
-            </div>
+            <Notice
+              tone="success"
+              title="Todos os movimentos têm categoria."
+              action={
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setOnlyUncategorized(false)}>
+                  Mostrar todos
+                </button>
+              }
+            />
           )}
 
           {visible.length > 0 && (
