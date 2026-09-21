@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
 import { formatCurrency } from "../utils/format";
@@ -90,6 +91,16 @@ export default function ImportPage() {
     });
   }
 
+  // Duplicados não podem ser selecionados (o servidor ignorá-los-ia).
+  function selectAll() {
+    if (!transactions) return;
+    setSelected(new Set(transactions.filter((t) => !t.duplicate).map((t) => t.hash)));
+  }
+
+  function selectNone() {
+    setSelected(new Set());
+  }
+
   async function handleConfirm() {
     if (!transactions) return;
 
@@ -132,6 +143,10 @@ export default function ImportPage() {
   }
 
   const hasBalance = transactions?.some((t) => t.balanceAfter !== null) ?? false;
+  const selectable = transactions?.filter((t) => !t.duplicate).length ?? 0;
+  const chosen = transactions?.filter((t) => selected.has(t.hash)) ?? [];
+  const selectedIncome = chosen.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+  const selectedExpenses = chosen.filter((t) => t.amount < 0).reduce((sum, t) => sum - t.amount, 0);
 
   return (
     <AppLayout>
@@ -175,17 +190,38 @@ export default function ImportPage() {
       {error && <p className="status status--error" role="alert">{error}</p>}
 
       {result && (
-        <p className="status status--success" role="status">
-          Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}"
-          {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}.
-        </p>
+        <div className="status status--success import-page__result" role="status">
+          <span>
+            Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}"
+            {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}.
+          </span>
+          <Link className="btn btn--ghost btn--sm" to="/transactions">
+            Ver transações
+          </Link>
+        </div>
       )}
 
       {transactions && (
-        <>
-          <p className="import-page__count">
-            {transactions.length} movimentos · {selected.size} selecionados
-          </p>
+        <div className="import-page__review">
+          <div className="import-page__toolbar">
+            <p className="import-page__count">
+              {transactions.length} movimentos
+              {transactions.length > selectable && ` · ${transactions.length - selectable} já importados`}
+            </p>
+            <div className="import-page__select">
+              <button
+                type="button"
+                className="btn btn--link"
+                onClick={selectAll}
+                disabled={selectable === 0 || selected.size === selectable}
+              >
+                Selecionar tudo
+              </button>
+              <button type="button" className="btn btn--link" onClick={selectNone} disabled={selected.size === 0}>
+                Nenhum
+              </button>
+            </div>
+          </div>
           <table className="ledger ledger--stack ledger--interactive import-table" role="table">
             <thead role="rowgroup">
               <tr role="row">
@@ -219,7 +255,7 @@ export default function ImportPage() {
                   </td>
                   <td role="cell" className="ledger__cell--desc">
                     {t.description}
-                    {t.duplicate && <span className="import-page__duplicate-tag">já importado</span>}
+                    {t.duplicate && <span className="tag import-page__duplicate-tag">já importado</span>}
                   </td>
                   <td
                     role="cell"
@@ -247,14 +283,27 @@ export default function ImportPage() {
             </tbody>
           </table>
 
-          <button
-            className="btn btn--primary import-page__confirm"
-            onClick={handleConfirm}
-            disabled={confirming || selected.size === 0}
-          >
-            {confirming ? "A confirmar…" : `Confirmar importação (${selected.size})`}
-          </button>
-        </>
+          {/* Barra fixa: com extratos longos a confirmação fica sempre visível.
+              .import-page__review reserva espaço em baixo para ela. */}
+          <div className="import-bar" role="region" aria-label="Confirmar importação">
+            <div className="app-shell__inner import-bar__inner">
+              <p className="import-bar__summary" aria-live="polite">
+                <strong>{selected.size} selecionados</strong>
+                <span className="import-bar__totals">
+                  <span className="ledger__amount ledger__amount--income">+{formatCurrency(selectedIncome)}</span>
+                  <span className="ledger__amount">−{formatCurrency(selectedExpenses)}</span>
+                </span>
+              </p>
+              <button
+                className="btn btn--primary import-bar__confirm"
+                onClick={handleConfirm}
+                disabled={confirming || selected.size === 0}
+              >
+                {confirming ? "A confirmar…" : `Confirmar importação (${selected.size})`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </AppLayout>
   );
