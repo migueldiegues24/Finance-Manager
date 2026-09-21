@@ -1,5 +1,7 @@
 import { useRef, useState, type ReactNode, type RefObject } from "react";
 import Modal from "./Modal";
+import Notice from "./Notice";
+import { toNotice, type NoticeContent } from "../api/errors";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -27,7 +29,7 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
 
   async function handleConfirm() {
     setBusy(true);
@@ -36,7 +38,7 @@ export default function ConfirmDialog({
       await onConfirm();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal. Tenta de novo.");
+      setError(toNotice(err));
     } finally {
       setBusy(false);
     }
@@ -66,11 +68,7 @@ export default function ConfirmDialog({
         </>
       }
     >
-      {error && (
-        <p className="status status--error modal__status" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} className="modal__status" />}
     </Modal>
   );
 }

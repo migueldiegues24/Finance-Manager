@@ -1,7 +1,8 @@
 import { useId, useState, type FormEvent, type RefObject } from "react";
 import { apiFetch } from "../api/client";
-import { readApiError } from "../api/errors";
 import Modal from "./Modal";
+import Notice from "./Notice";
+import { apiFailure, toNotice, type NoticeContent } from "../api/errors";
 
 interface RuleDialogProps {
   open: boolean;
@@ -20,7 +21,7 @@ export default function RuleDialog({ open, categories, onClose, onSaved, returnF
   const [keyword, setKeyword] = useState("");
   const [targetId, setTargetId] = useState("");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -33,11 +34,11 @@ export default function RuleDialog({ open, categories, onClose, onSaved, returnF
         method: "POST",
         body: JSON.stringify({ keyword: keyword.trim(), categoryId: Number(targetId) }),
       });
-      if (!res.ok) throw new Error((await readApiError(res)) ?? "Não foi possível criar a regra");
+      if (!res.ok) throw await apiFailure(res, "Não foi possível criar a regra.");
       await onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
+      setError(toNotice(err));
     } finally {
       setSaving(false);
     }
@@ -66,11 +67,7 @@ export default function RuleDialog({ open, categories, onClose, onSaved, returnF
       }
     >
       <form id={formId} className="dialog-form" onSubmit={handleSubmit} noValidate>
-        {error && (
-          <p className="status status--error modal__status" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <Notice tone="error" title={error.title} detail={error.detail} className="modal__status" />}
         <div>
           <label className="field-label" htmlFor={keywordId}>
             Palavra-chave

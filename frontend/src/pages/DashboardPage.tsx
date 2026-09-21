@@ -8,6 +8,8 @@ import { useMonthParam } from "../hooks/useMonthParam";
 import { categoryStyle } from "../utils/categoryColor";
 import { formatCurrency } from "../utils/format";
 import "./DashboardPage.css";
+import Notice from "../components/Notice";
+import { AppError, toNotice, type NoticeContent } from "../api/errors";
 
 interface CategoryTotal {
   categoryId: number;
@@ -44,7 +46,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [uncategorizedId, setUncategorizedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,7 +55,7 @@ export default function DashboardPage() {
 
     Promise.all([apiFetch(`/dashboard/summary?month=${month}`), apiFetch("/categories")])
       .then(async ([summaryRes, categoriesRes]) => {
-        if (!summaryRes.ok || !categoriesRes.ok) throw new Error("Não foi possível carregar o resumo");
+        if (!summaryRes.ok || !categoriesRes.ok) throw new AppError("Não foi possível carregar o resumo.");
         const [data, categories]: [DashboardSummary, Category[]] = await Promise.all([
           summaryRes.json(),
           categoriesRes.json(),
@@ -64,7 +66,7 @@ export default function DashboardPage() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Algo correu mal");
+        if (!cancelled) setError(toNotice(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -84,8 +86,8 @@ export default function DashboardPage() {
         <MonthNav month={month} onChange={setMonth} />
       </header>
 
-      {loading && <p className="status" role="status">A carregar…</p>}
-      {error && <p className="status status--error" role="alert">{error}</p>}
+      {loading && <Notice title="A carregar…" />}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} />}
 
       {summary && !loading && !error && isEmpty && <EmptyMonth month={month} onChange={setMonth} />}
 
@@ -119,7 +121,7 @@ export default function DashboardPage() {
             </h2>
 
             {summary.totals.length === 0 ? (
-              <p className="status">Sem despesas registadas neste mês.</p>
+              <Notice title="Sem despesas este mês." />
             ) : (
               <table className="ledger dashboard__table">
                 <thead>

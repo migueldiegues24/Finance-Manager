@@ -1,7 +1,8 @@
 import { useId, useState, type FormEvent, type RefObject } from "react";
 import { apiFetch } from "../api/client";
-import { readApiError } from "../api/errors";
 import Modal from "./Modal";
+import Notice from "./Notice";
+import { apiFailure, toNotice, type NoticeContent } from "../api/errors";
 
 interface CategoryDialogProps {
   open: boolean;
@@ -20,7 +21,7 @@ export default function CategoryDialog({ open, category, onClose, onSaved, retur
   const inputId = useId();
   const [name, setName] = useState(category?.name ?? "");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
   const isEdit = category !== null;
 
   async function handleSubmit(event: FormEvent) {
@@ -35,12 +36,12 @@ export default function CategoryDialog({ open, category, onClose, onSaved, retur
         body: JSON.stringify({ name: name.trim() }),
       });
       if (!res.ok) {
-        throw new Error((await readApiError(res)) ?? (isEdit ? "Não foi possível editar a categoria" : "Não foi possível criar a categoria"));
+        throw await apiFailure(res, isEdit ? "Não foi possível editar a categoria." : "Não foi possível criar a categoria.");
       }
       await onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo correu mal");
+      setError(toNotice(err));
     } finally {
       setSaving(false);
     }
@@ -64,11 +65,7 @@ export default function CategoryDialog({ open, category, onClose, onSaved, retur
       }
     >
       <form id={formId} onSubmit={handleSubmit} noValidate>
-        {error && (
-          <p className="status status--error modal__status" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <Notice tone="error" title={error.title} detail={error.detail} className="modal__status" />}
         <label className="field-label" htmlFor={inputId}>
           Nome
         </label>

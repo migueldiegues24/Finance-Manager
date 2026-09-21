@@ -327,6 +327,31 @@ select.field {
   color: var(--color-ink);
 }
 
+/* Notice: título curto + detalhe secundário opcional + ação à direita. */
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.notice__text {
+  min-width: 0;
+}
+
+/* Texto secundário: mais pequeno e suave (>= 4,5:1 também sobre as tintas). */
+.status__detail {
+  margin-top: 0.15rem;
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.page-header__detail {
+  margin-top: var(--space-1);
+}
+
 /* ---------- Etiquetas e pontos de cor ---------- */
 
 /* A cor vem de --tag-color / --category-color (ver utils/categoryColor.ts).
