@@ -26,6 +26,11 @@ public class SimpleCsvStatementParser implements StatementParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     @Override
+    public Bank bank() {
+        return Bank.GENERIC;
+    }
+
+    @Override
     public List<ParsedTransaction> parse(MultipartFile file) throws IOException {
         List<ParsedTransaction> transactions = new ArrayList<>();
 
