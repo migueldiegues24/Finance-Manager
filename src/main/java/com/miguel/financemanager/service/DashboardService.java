@@ -44,4 +44,16 @@ public class DashboardService {
 
         return new DashboardSummaryResponse(yearMonth.toString(), totals, overallTotal);
     }
+
+    // Meses ("yyyy-MM", por ordem crescente) com pelo menos uma transação;
+    // usados pelo seletor de mês para assinalar onde há dados.
+    public List<String> getMonthsWithTransactions() {
+        User user = currentUserService.getCurrentUser();
+
+        return transactionRepository.findDistinctYearMonths(user).stream()
+                .map(row -> YearMonth.of(((Number) row[0]).intValue(), ((Number) row[1]).intValue()))
+                .sorted()
+                .map(YearMonth::toString)
+                .toList();
+    }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.YearMonth;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -27,5 +28,11 @@ public class DashboardController {
 
         YearMonth target = month != null ? month : YearMonth.now();
         return ResponseEntity.ok(dashboardService.getMonthlySummary(target));
+    }
+
+    // GET /api/dashboard/months — ["2026-08", "2026-09", ...], só meses com transações.
+    @GetMapping("/months")
+    public ResponseEntity<List<String>> months() {
+        return ResponseEntity.ok(dashboardService.getMonthsWithTransactions());
     }
 }
