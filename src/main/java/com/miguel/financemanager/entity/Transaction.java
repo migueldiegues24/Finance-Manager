@@ -28,8 +28,13 @@ public class Transaction {
     @JoinColumn(name = "import_id", nullable = false)
     private StatementImport statementImport;
 
+    // Data usada em toda a app (dashboard, filtros). Nos extratos CGD é a data-valor.
     @Column(name = "transaction_date", nullable = false)
     private LocalDate transactionDate;
+
+    // Data do movimento, quando o extrato a distingue da data-valor (CGD).
+    @Column(name = "movement_date")
+    private LocalDate movementDate;
 
     @Column(nullable = false, length = 500)
     private String description;
@@ -37,12 +42,16 @@ public class Transaction {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    // Saldo contabilístico após o movimento, quando o extrato o traz (CGD).
+    @Column(name = "balance_after", precision = 12, scale = 2)
+    private BigDecimal balanceAfter;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    // Hash calculado no parse (user_id + date + description + amount),
-    // usado para sinalizar possíveis duplicados na página de revisão.
+    // Fingerprint de deduplicação (ver TransactionFingerprint). O confirm
+    // ignora movimentos cujo hash já existe para o utilizador.
     @Column(nullable = false, length = 64)
     private String hash;
 

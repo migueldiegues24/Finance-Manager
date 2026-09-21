@@ -1,6 +1,7 @@
 package com.miguel.financemanager.entity;
 
 import jakarta.persistence.*;
+import com.miguel.financemanager.service.parsing.Bank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,11 @@ public class StatementImport {
 
     @Column(nullable = false, length = 255)
     private String filename;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private Bank bank = Bank.GENERIC;
 
     @Column(name = "imported_at", nullable = false, updatable = false)
     @Builder.Default

@@ -24,3 +24,8 @@ hs_err_pid*
 replay_pid*
 extrato_teste.csv
 resposta.json
+
+# Extratos bancários reais (nunca fazer commit)
+Consulta_de_movimentos*.csv
+extratos/
+target/

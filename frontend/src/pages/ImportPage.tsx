@@ -4,10 +4,15 @@ import AppLayout from "../components/AppLayout";
 import { formatCurrency } from "../utils/format";
 import "./ImportPage.css";
 
+type Bank = "CGD" | "GENERIC";
+
 interface ParsedTransaction {
   date: string;
+  movementDate: string | null;
   description: string;
   amount: number;
+  balanceAfter: number | null;
+  occurrence: number;
   hash: string;
   duplicate: boolean;
 }
@@ -16,9 +21,16 @@ interface ImportSummary {
   importId: number;
   filename: string;
   transactionsSaved: number;
+  duplicatesSkipped: number;
 }
 
+const BANK_HINTS: Record<Bank, string> = {
+  CGD: "Exporta a \"Consulta de movimentos\" na app da CGD (o ficheiro \"XLS\" serve, é um CSV), sem filtros.",
+  GENERIC: "Carrega um CSV com as colunas date, description, amount.",
+};
+
 export default function ImportPage() {
+  const [bank, setBank] = useState<Bank>("CGD");
   const [file, setFile] = useState<File | null>(null);
   const [filename, setFilename] = useState("");
   const [transactions, setTransactions] = useState<ParsedTransaction[] | null>(null);
@@ -44,6 +56,7 @@ export default function ImportPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("bank", bank);
 
       const res = await apiFetch("/imports/parse", { method: "POST", body: formData });
       if (!res.ok) {
@@ -54,8 +67,9 @@ export default function ImportPage() {
       const data: { filename: string; transactions: ParsedTransaction[] } = await res.json();
       setFilename(data.filename);
       setTransactions(data.transactions);
-      // Duplicados ficam desmarcados por defeito, o utilizador pode voltar
-      // a marcá-los se for mesmo intencional (ex.: dois cafés no mesmo dia).
+      // Movimentos já importados ficam desmarcados (e o servidor ignora-os
+      // de qualquer forma). Movimentos iguais no mesmo ficheiro, como dois
+      // cafés no mesmo dia, têm hashes diferentes e não são duplicados.
       setSelected(new Set(data.transactions.filter((t) => !t.duplicate).map((t) => t.hash)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Algo correu mal");
@@ -89,7 +103,15 @@ export default function ImportPage() {
         method: "POST",
         body: JSON.stringify({
           filename,
-          transactions: chosen.map(({ date, description, amount }) => ({ date, description, amount })),
+          bank,
+          transactions: chosen.map(({ date, movementDate, description, amount, balanceAfter, occurrence }) => ({
+            date,
+            movementDate,
+            description,
+            amount,
+            balanceAfter,
+            occurrence,
+          })),
         }),
       });
 
@@ -109,17 +131,30 @@ export default function ImportPage() {
     }
   }
 
+  const hasBalance = transactions?.some((t) => t.balanceAfter !== null) ?? false;
+
   return (
     <AppLayout>
       <h1 className="import-page__title">Importar extrato</h1>
-      <p className="import-page__subtitle">
-        Carrega um CSV com as colunas date, description, amount.
-      </p>
+      <p className="import-page__subtitle">{BANK_HINTS[bank]}</p>
 
       <form className="import-page__upload" onSubmit={handleAnalyze}>
+        <select
+          className="import-page__bank"
+          value={bank}
+          onChange={(event) => {
+            setBank(event.target.value as Bank);
+            setTransactions(null);
+            setResult(null);
+          }}
+          aria-label="Banco"
+        >
+          <option value="CGD">CGD</option>
+          <option value="GENERIC">CSV genérico</option>
+        </select>
         <label className="import-page__file-label">
-          {file ? file.name : "Escolher ficheiro CSV"}
-          <input type="file" accept=".csv" onChange={handleFileChange} hidden />
+          {file ? file.name : "Escolher ficheiro"}
+          <input type="file" accept=".csv,.xls,text/csv" onChange={handleFileChange} hidden />
         </label>
         <button type="submit" disabled={!file || analyzing}>
           {analyzing ? "A analisar…" : "Analisar"}
@@ -130,7 +165,8 @@ export default function ImportPage() {
 
       {result && (
         <p className="import-page__result">
-          Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}".
+          Importação concluída: {result.transactionsSaved} transações guardadas de "{result.filename}"
+          {result.duplicatesSkipped > 0 && ` (${result.duplicatesSkipped} já existiam e foram ignoradas)`}.
         </p>
       )}
 
@@ -143,6 +179,7 @@ export default function ImportPage() {
                 <th>Data</th>
                 <th>Descrição</th>
                 <th>Valor</th>
+                {hasBalance && <th>Saldo</th>}
               </tr>
             </thead>
             <tbody>
@@ -152,10 +189,13 @@ export default function ImportPage() {
                     <input
                       type="checkbox"
                       checked={selected.has(t.hash)}
+                      disabled={t.duplicate}
                       onChange={() => toggle(t.hash)}
                     />
                   </td>
-                  <td>{t.date}</td>
+                  <td title={t.movementDate && t.movementDate !== t.date ? `Data do movimento: ${t.movementDate}` : undefined}>
+                    {t.date}
+                  </td>
                   <td>
                     {t.description}
                     {t.duplicate && <span className="import-page__duplicate-tag"> (já importado)</span>}
@@ -164,6 +204,7 @@ export default function ImportPage() {
                     {t.amount < 0 ? "−" : "+"}
                     {formatCurrency(Math.abs(t.amount))}
                   </td>
+                  {hasBalance && <td className="ledger__amount">{t.balanceAfter !== null ? formatCurrency(t.balanceAfter) : ""}</td>}
                 </tr>
               ))}
             </tbody>

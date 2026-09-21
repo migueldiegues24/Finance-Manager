@@ -14,24 +14,29 @@ import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.StatementImportRepository;
 import com.miguel.financemanager.repository.TransactionRepository;
+import com.miguel.financemanager.service.parsing.Bank;
 import com.miguel.financemanager.service.parsing.ParsedTransaction;
-import com.miguel.financemanager.service.parsing.StatementParser;
-import com.miguel.financemanager.service.util.HashUtil;
+import com.miguel.financemanager.service.parsing.StatementParserRegistry;
+import com.miguel.financemanager.service.util.DescriptionNormalizer;
+import com.miguel.financemanager.service.util.TransactionFingerprint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class ImportService {
 
-    private final StatementParser statementParser;
+    private final StatementParserRegistry parserRegistry;
     private final TransactionRepository transactionRepository;
     private final StatementImportRepository statementImportRepository;
     private final CategoryRepository categoryRepository;
@@ -40,23 +45,28 @@ public class ImportService {
 
     // Não persiste nada. O frontend mostra esta lista numa página de
     // revisão, onde o utilizador remove o que não quer antes de confirmar.
-    public ParseImportResponse parseStatement(MultipartFile file) {
+    public ParseImportResponse parseStatement(MultipartFile file, Bank bank) {
         User user = currentUserService.getCurrentUser();
 
         List<ParsedTransaction> parsed;
         try {
-            parsed = statementParser.parse(file);
+            parsed = parserRegistry.forBank(bank).parse(file);
         } catch (IOException e) {
             throw new IllegalArgumentException("Não foi possível ler o ficheiro: " + e.getMessage());
         }
 
-        List<ParsedTransactionResponse> response = parsed.stream()
-                .map(t -> {
-                    String hash = computeHash(user, t.date(), t.description(), t.amount());
-                    boolean duplicate = transactionRepository.existsByUserAndHash(user, hash);
-                    return new ParsedTransactionResponse(t.date(), t.description(), t.amount(), hash, duplicate);
-                })
-                .toList();
+        // Movimentos idênticos no mesmo ficheiro recebem ocorrências 0, 1, 2...
+        // pela ordem em que aparecem, para não colidirem entre si.
+        Map<String, Integer> seen = new HashMap<>();
+        List<ParsedTransactionResponse> response = new ArrayList<>();
+        for (ParsedTransaction t : parsed) {
+            String baseHash = fingerprint(user, t, 0);
+            int occurrence = seen.merge(baseHash, 1, Integer::sum) - 1;
+            String hash = occurrence == 0 ? baseHash : fingerprint(user, t, occurrence);
+            boolean duplicate = transactionRepository.existsByUserAndHash(user, hash);
+            response.add(new ParsedTransactionResponse(t.date(), t.movementDate(), t.description(), t.amount(),
+                    t.balanceAfter(), occurrence, hash, duplicate));
+        }
 
         return new ParseImportResponse(file.getOriginalFilename(), response);
     }
@@ -68,6 +78,7 @@ public class ImportService {
         StatementImport statementImport = StatementImport.builder()
                 .user(user)
                 .filename(request.getFilename())
+                .bank(request.getBank() != null ? request.getBank() : Bank.GENERIC)
                 .build();
         statementImportRepository.save(statementImport);
 
@@ -75,16 +86,33 @@ public class ImportService {
         Category fallback = resolveFallbackCategory(user);
 
         int saved = 0;
+        int skipped = 0;
+        Set<String> hashesInRequest = new HashSet<>();
         for (ConfirmTransactionRequest t : request.getTransactions()) {
+            String hash = TransactionFingerprint.compute(user.getId(), t.getDate(), t.getMovementDate(),
+                    t.getDescription(), t.getAmount(), t.getBalanceAfter(), t.getOccurrence());
+
+            // Movimentos idênticos legítimos chegam com ocorrências diferentes;
+            // o mesmo hash duas vezes só acontece se o pedido estiver mal formado.
+            if (!hashesInRequest.add(hash)) {
+                throw new IllegalArgumentException("Movimento repetido no pedido: " + t.getDate() + " "
+                        + t.getDescription() + " " + t.getAmount() + " (ocorrência " + t.getOccurrence() + ")");
+            }
+            if (transactionRepository.existsByUserAndHash(user, hash)) {
+                skipped++;
+                continue;
+            }
+
             Category category = resolveCategory(t.getDescription(), rules, fallback);
-            String hash = computeHash(user, t.getDate(), t.getDescription(), t.getAmount());
 
             Transaction transaction = Transaction.builder()
                     .user(user)
                     .statementImport(statementImport)
                     .transactionDate(t.getDate())
+                    .movementDate(t.getMovementDate())
                     .description(t.getDescription())
                     .amount(t.getAmount())
+                    .balanceAfter(t.getBalanceAfter())
                     .category(category)
                     .hash(hash)
                     .build();
@@ -93,15 +121,16 @@ public class ImportService {
             saved++;
         }
 
-        return new ImportSummaryResponse(statementImport.getId(), statementImport.getFilename(), saved);
+        return new ImportSummaryResponse(statementImport.getId(), statementImport.getFilename(), saved, skipped);
     }
 
     // Percorre as regras por prioridade e devolve a primeira categoria cuja
-    // keyword aparece na descrição. Sem correspondência, usa o fallback.
+    // keyword está contida na descrição, comparando ambas normalizadas
+    // (maiúsculas, sem acentos, espaços colapsados). Sem correspondência, usa o fallback.
     private Category resolveCategory(String description, List<CategorizationRule> rules, Category fallback) {
-        String lowerDescription = description.toLowerCase();
+        String normalizedDescription = DescriptionNormalizer.normalize(description);
         for (CategorizationRule rule : rules) {
-            if (lowerDescription.contains(rule.getKeyword().toLowerCase())) {
+            if (normalizedDescription.contains(DescriptionNormalizer.normalize(rule.getKeyword()))) {
                 return rule.getCategory();
             }
         }
@@ -117,8 +146,8 @@ public class ImportService {
                                 "Nenhuma categoria fallback encontrada para o utilizador")));
     }
 
-    private String computeHash(User user, LocalDate date, String description, BigDecimal amount) {
-        String raw = user.getId() + "|" + date + "|" + description + "|" + amount.stripTrailingZeros().toPlainString();
-        return HashUtil.sha256Base64Url(raw);
+    private String fingerprint(User user, ParsedTransaction t, int occurrence) {
+        return TransactionFingerprint.compute(user.getId(), t.date(), t.movementDate(), t.description(),
+                t.amount(), t.balanceAfter(), occurrence);
     }
 }
