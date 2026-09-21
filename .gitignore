@@ -28,3 +28,4 @@ resposta.json
 # Extratos bancários reais (nunca fazer commit)
 Consulta_de_movimentos*.csv
 extratos/
+target/
