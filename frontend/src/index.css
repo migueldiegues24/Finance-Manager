@@ -8,6 +8,18 @@
   --color-bg: #eeefea;
   --color-ink: #1b2a4a;
   --color-panel: #1b2a4a;
+  --color-panel-ink: #eeefea;
+
+  /* Papéis que se invertem no tema escuro: texto sobre o acento e sobre o
+     vermelho de apagar, fundo do Modal, sombras e a cor para onde vão os
+     estados pressionados. */
+  --color-on-accent: var(--color-bg);
+  --color-on-danger: var(--color-bg);
+  --color-overlay: color-mix(in srgb, var(--color-ink) 45%, transparent);
+  --color-shadow: var(--color-ink);
+  --color-pressed-mix: black;
+
+  color-scheme: light;
   --color-expense: #8b2635;
   --color-income: #3d6b4f;
 
@@ -50,13 +62,13 @@
   --color-line: color-mix(in srgb, var(--color-ink) 15%, transparent);
   --color-line-strong: color-mix(in srgb, var(--color-ink) 35%, transparent);
   --color-control-line: color-mix(in srgb, var(--color-ink) 55%, transparent);
-  --color-panel-line: color-mix(in srgb, var(--color-bg) 18%, transparent);
+  --color-panel-line: color-mix(in srgb, var(--color-panel-ink) 18%, transparent);
 
   /* Tinta em estados de botões principais. */
   --color-ink-hover: color-mix(in srgb, var(--color-ink) 88%, var(--color-bg));
-  --color-ink-pressed: color-mix(in oklab, var(--color-ink) 82%, black);
+  --color-ink-pressed: color-mix(in oklab, var(--color-ink) 82%, var(--color-pressed-mix));
   --color-accent-hover: color-mix(in srgb, var(--color-accent) 88%, var(--color-bg)); /* texto claro 4,86:1 */
-  --color-accent-pressed: color-mix(in oklab, var(--color-accent) 82%, black);
+  --color-accent-pressed: color-mix(in oklab, var(--color-accent) 82%, var(--color-pressed-mix));
   --color-focus: var(--color-ink);
 
   /* Cabeçalho da app. Para testar a faixa em tinta:
@@ -93,6 +105,46 @@
   /* Movimento */
   --duration: 160ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/*
+ * Tema escuro (data-theme="dark" no <html>, ver utils/theme.ts). Fundo
+ * azul-tinta profundo e texto em tom de papel. Row-alt, row-hover, tintas
+ * e linhas usam as mesmas fórmulas do claro (tinta sobre o fundo).
+ * Contraste (texto): pior caso sobre fundo / row-alt / row-hover:
+ *   tinta #E7E4DA 10,68   texto suave 72% 6,32   despesa #EE8F86 5,76
+ *   receita #8CCBA2 7,23   acento #6CBAC6 6,13   aviso #E0B066 6,84
+ *   categorias >= 6,03 (e >= 6,32 na própria tinta a 10%)
+ *   texto escuro sobre acento / apagar: 7,66 / 7,20 (hover 6,23 / 5,85)
+ *   tinta sobre accent-tint / attention-tint: 11,17 / 11,13
+ * Contornos: control-line 55% 4,63 em row-alt; anel de foco (tinta) >= 10,68.
+ */
+:root[data-theme="dark"] {
+  --color-bg: #131c30;
+  --color-ink: #e7e4da;
+  --color-panel: #0d1424;
+  --color-panel-ink: #e7e4da;
+  --color-expense: #ee8f86;
+  --color-income: #8ccba2;
+  --color-accent: #6cbac6;
+  --color-attention: #e0b066;
+
+  --color-cat-1: #8fb3e0; /* cobalto 6,27 */
+  --color-cat-2: #72c2b6; /* verde-azulado 6,54 */
+  --color-cat-3: #b8a2e3; /* violeta 6,03 */
+  --color-cat-4: #e4a077; /* terracota 6,21 */
+  --color-cat-5: #c9bd6a; /* azeitona 7,10 */
+  --color-cat-6: #e59ac4; /* magenta 6,31 */
+  --color-cat-7: #a9b1c7; /* ardósia 6,34 */
+  --color-cat-8: #cdae8a; /* sépia 6,48 */
+
+  --color-on-accent: var(--color-bg);
+  --color-on-danger: var(--color-bg);
+  --color-overlay: color-mix(in srgb, #03060c 65%, transparent);
+  --color-shadow: #03060c;
+  --color-pressed-mix: var(--color-bg);
+
+  color-scheme: dark;
 }
 
 * {

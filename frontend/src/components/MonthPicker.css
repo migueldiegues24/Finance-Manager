@@ -7,7 +7,7 @@
   padding: var(--space-4);
   border: 1px solid var(--color-ink);
   background: var(--color-bg);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-ink) 18%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-shadow) 18%, transparent);
   font-family: var(--font-mono);
   font-size: 0.9rem;
 }
@@ -94,15 +94,15 @@
 .month-picker__cell.is-selected {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-bg);
+  color: var(--color-on-accent);
 }
 
 .month-picker__cell.is-selected.is-today {
-  text-decoration-color: var(--color-bg);
+  text-decoration-color: var(--color-on-accent);
 }
 
 .month-picker__cell.is-selected.has-data::after {
-  background: var(--color-bg);
+  background: var(--color-on-accent);
 }
 
 .month-picker__cell[aria-disabled="true"] {

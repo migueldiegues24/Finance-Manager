@@ -160,7 +160,7 @@
 .btn--primary {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-bg);
+  color: var(--color-on-accent);
 }
 
 .btn--ghost {
@@ -228,7 +228,7 @@
 .btn--destructive {
   background: var(--color-expense);
   border-color: var(--color-expense);
-  color: var(--color-bg);
+  color: var(--color-on-danger);
 }
 
 .btn--destructive:hover:not(:disabled) {
@@ -237,8 +237,8 @@
 }
 
 .btn--destructive:active:not(:disabled) {
-  background: color-mix(in oklab, var(--color-expense) 82%, black);
-  border-color: color-mix(in oklab, var(--color-expense) 82%, black);
+  background: color-mix(in oklab, var(--color-expense) 82%, var(--color-pressed-mix));
+  border-color: color-mix(in oklab, var(--color-expense) 82%, var(--color-pressed-mix));
 }
 
 .btn--danger:hover:not(:disabled),

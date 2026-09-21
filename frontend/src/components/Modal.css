@@ -6,7 +6,7 @@
   place-items: center;
   padding: var(--gutter);
   padding-bottom: calc(var(--gutter) + env(safe-area-inset-bottom, 0px));
-  background: color-mix(in srgb, var(--color-ink) 45%, transparent);
+  background: var(--color-overlay);
   animation: modal-fade var(--duration) var(--ease);
 }
 
@@ -18,7 +18,7 @@
   border: 1px solid var(--color-ink);
   border-top: 3px double var(--color-ink);
   background: var(--color-bg);
-  box-shadow: 0 24px 48px color-mix(in srgb, var(--color-ink) 25%, transparent);
+  box-shadow: 0 24px 48px color-mix(in srgb, var(--color-shadow) 25%, transparent);
   animation: modal-in var(--duration) var(--ease);
 }
 
