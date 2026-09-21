@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
+import MonthNav from "../components/MonthNav";
+import { useMonthParam } from "../hooks/useMonthParam";
 import { formatCurrency } from "../utils/format";
-import { currentMonth, shiftMonth, formatMonthLabel } from "../utils/date";
 import "./TransactionsPage.css";
 
 interface Transaction {
@@ -21,7 +22,7 @@ interface Category {
 }
 
 export default function TransactionsPage() {
-  const [month, setMonth] = useState(currentMonth());
+  const [month, setMonth] = useMonthParam();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,25 +80,7 @@ export default function TransactionsPage() {
     <AppLayout>
       <header className="page-header">
         <p className="page-header__eyebrow">Movimentos do mês</p>
-        <div className="month-nav">
-          <h1 className="page-header__title month-nav__title">{formatMonthLabel(month)}</h1>
-          <div className="month-nav__controls">
-            <button
-              className="btn btn--ghost month-nav__btn"
-              onClick={() => setMonth((m) => shiftMonth(m, -1))}
-              aria-label="Mês anterior"
-            >
-              ‹
-            </button>
-            <button
-              className="btn btn--ghost month-nav__btn"
-              onClick={() => setMonth((m) => shiftMonth(m, 1))}
-              aria-label="Mês seguinte"
-            >
-              ›
-            </button>
-          </div>
-        </div>
+        <MonthNav month={month} onChange={setMonth} />
       </header>
 
       {loading && <p className="status" role="status">A carregar…</p>}

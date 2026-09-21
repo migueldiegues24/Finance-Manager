@@ -1,17 +1,20 @@
 import type { ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./AppLayout.css";
 
+// keepMonth: páginas que partilham o mês selecionado (?month=YYYY-MM).
 const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/transactions", label: "Transações" },
-  { to: "/import", label: "Importar" },
-  { to: "/categories", label: "Categorias" },
+  { to: "/dashboard", label: "Dashboard", keepMonth: true },
+  { to: "/transactions", label: "Transações", keepMonth: true },
+  { to: "/import", label: "Importar", keepMonth: false },
+  { to: "/categories", label: "Categorias", keepMonth: false },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
+  const [searchParams] = useSearchParams();
+  const month = searchParams.get("month");
 
   return (
     <div className="app-shell">
@@ -25,7 +28,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               {NAV_ITEMS.map((item) => (
                 <NavLink
                   key={item.to}
-                  to={item.to}
+                  to={item.keepMonth && month ? { pathname: item.to, search: `?month=${month}` } : item.to}
                   className={({ isActive }) => (isActive ? "app-shell__link active" : "app-shell__link")}
                 >
                   {item.label}
