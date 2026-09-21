@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
 import RuleDialog from "../components/RuleDialog";
+import { useTheme } from "../theme/themeContext";
 import { categoryStyle } from "../utils/categoryColor";
 import "./CategoriesPage.css";
 import Notice from "../components/Notice";
@@ -11,6 +12,7 @@ interface Category {
   id: number;
   name: string;
   defaultCategory: boolean;
+  color?: string | null;
 }
 
 interface Rule {
@@ -41,6 +43,8 @@ export default function RulesPage() {
   const [error, setError] = useState<NoticeContent | null>(null);
   const [dialogKey, setDialogKey] = useState<number | null>(null);
   const newButtonRef = useRef<HTMLButtonElement>(null);
+  const { theme } = useTheme();
+  const colorOf = new Map(categories.map((c) => [c.id, c.color]));
 
   const reload = useCallback(async () => {
     const [ruleData, catData] = await fetchRulesAndCategories();
@@ -122,7 +126,7 @@ export default function RulesPage() {
               <tr key={rule.id}>
                 <td>{rule.keyword}</td>
                 <td>
-                  <span className="tag" style={categoryStyle(rule.categoryId)}>
+                  <span className="tag" style={categoryStyle(rule.categoryId, colorOf.get(rule.categoryId), theme)}>
                     {rule.categoryName}
                   </span>
                 </td>
