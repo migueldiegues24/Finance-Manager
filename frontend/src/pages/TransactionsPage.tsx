@@ -95,25 +95,27 @@ export default function TransactionsPage() {
         transactions.length === 0 ? (
           <p className="dashboard__status">Sem transações neste mês.</p>
         ) : (
-          <table className="ledger transactions-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Categoria</th>
-                <th>Valor</th>
+          <table className="ledger ledger--stack transactions-table" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader" scope="col">Data</th>
+                <th role="columnheader" scope="col">Descrição</th>
+                <th role="columnheader" scope="col">Categoria</th>
+                <th role="columnheader" scope="col" className="ledger__num">Valor</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {transactions.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.date}</td>
-                  <td>{t.description}</td>
-                  <td>
+                <tr role="row" key={t.id}>
+                  <td role="cell" className="ledger__cell--date">{t.date}</td>
+                  <td role="cell" className="ledger__cell--desc">{t.description}</td>
+                  <td role="cell" className="ledger__cell--category">
                     <select
+                      className="field transactions-table__select"
                       value={t.categoryId}
                       disabled={savingId === t.id}
                       onChange={(e) => handleCategoryChange(t.id, e.target.value)}
+                      aria-label={`Categoria de ${t.description}`}
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -122,7 +124,14 @@ export default function TransactionsPage() {
                       ))}
                     </select>
                   </td>
-                  <td className={t.amount < 0 ? "ledger__amount" : "ledger__amount ledger__amount--income"}>
+                  <td
+                    role="cell"
+                    className={
+                      t.amount < 0
+                        ? "ledger__num ledger__cell--amount ledger__amount"
+                        : "ledger__num ledger__cell--amount ledger__amount ledger__amount--income"
+                    }
+                  >
                     {t.amount < 0 ? "−" : "+"}
                     {formatCurrency(Math.abs(t.amount))}
                   </td>
