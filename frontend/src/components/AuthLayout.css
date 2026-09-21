@@ -81,7 +81,13 @@
 .auth-form__switch a {
   color: var(--color-ink);
   text-decoration: underline;
+  text-decoration-color: var(--color-line-strong);
   text-underline-offset: 3px;
+  transition: text-decoration-color var(--duration) var(--ease);
+}
+
+.auth-form__switch a:hover {
+  text-decoration-color: currentColor;
 }
 
 @media (max-width: 860px) {

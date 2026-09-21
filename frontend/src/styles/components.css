@@ -92,6 +92,12 @@
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease),
+    text-decoration-color var(--duration) var(--ease);
 }
 
 .btn--primary {
@@ -130,6 +136,41 @@
   cursor: not-allowed;
 }
 
+/* Estados: só mudam cor, fundo, contorno e sombra, nunca tamanhos, por
+   isso não há saltos de layout. */
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-ink-hover);
+  border-color: var(--color-ink-hover);
+}
+
+.btn--primary:active:not(:disabled) {
+  background: var(--color-ink-pressed);
+  border-color: var(--color-ink-pressed);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-row-alt);
+  border-color: var(--color-ink);
+}
+
+.btn--ghost:active:not(:disabled) {
+  background: var(--color-row-hover);
+}
+
+.btn--link:hover:not(:disabled) {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
+.btn--link:active:not(:disabled) {
+  color: var(--color-ink-pressed);
+}
+
+.btn--danger:hover:not(:disabled),
+.btn--danger:active:not(:disabled) {
+  color: var(--color-expense);
+}
+
 /* ---------- Campos ---------- */
 
 .field {
@@ -143,6 +184,22 @@
   color: var(--color-ink);
   font-family: var(--font-mono);
   font-size: 0.95rem;
+  outline: none;
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+
+.field:hover:not(:disabled) {
+  border-bottom-color: var(--color-ink);
+}
+
+/* O foco engrossa o sublinhado com uma sombra (não com a borda), para a
+   altura do campo não mudar. */
+.field:focus,
+.field:focus-visible {
+  border-bottom-color: var(--color-ink);
+  box-shadow: 0 1px 0 0 var(--color-ink);
   outline: none;
 }
 

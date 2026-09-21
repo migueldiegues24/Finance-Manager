@@ -33,6 +33,16 @@
   background: var(--color-row-alt);
 }
 
+/* Realce de linha só em tabelas com controlos por linha (ex.: importação),
+   para seguir a linha inteira sem sugerir cliques onde não os há. */
+.ledger--interactive tbody tr {
+  transition: background-color var(--duration) var(--ease);
+}
+
+.ledger--interactive tbody tr:hover {
+  background: var(--color-row-hover);
+}
+
 .ledger th:last-child,
 .ledger td:last-child,
 .ledger .ledger__num {
