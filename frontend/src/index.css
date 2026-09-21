@@ -1,14 +1,72 @@
+/*
+ * Tema: todas as cores da app vêm daqui. As cores base são as da
+ * identidade (livro-razão); tudo o resto é derivado delas com color-mix,
+ * para não haver cinzas soltos.
+ */
 :root {
+  /* Base */
   --color-bg: #eeefea;
-  --color-panel: #1b2a4a;
-  --color-panel-line: rgba(238, 239, 234, 0.18);
   --color-ink: #1b2a4a;
-  --color-ink-soft: rgba(27, 42, 74, 0.6);
-  --color-line: rgba(27, 42, 74, 0.15);
+  --color-panel: #1b2a4a;
   --color-expense: #8b2635;
   --color-income: #3d6b4f;
-  --font-display: "Fraunces", serif;
-  --font-mono: "IBM Plex Mono", monospace;
+
+  /* Texto secundário. Com alpha, o contraste acompanha a superfície:
+     72% dá 5,38:1 no fundo, 5,13:1 em --color-row-alt e 4,92:1 em
+     --color-row-hover. Abaixo de ~68% falha os 4,5:1. */
+  --color-ink-soft: color-mix(in srgb, var(--color-ink) 72%, transparent);
+
+  /* Superfícies derivadas do fundo + tinta. O --color-row-hover não deve
+     passar de 9%: a receita fica aí a 4,51:1, no limite dos 4,5:1. */
+  --color-row-alt: color-mix(in srgb, var(--color-ink) 5%, var(--color-bg));
+  --color-row-hover: color-mix(in srgb, var(--color-ink) 9%, var(--color-bg));
+  --color-expense-tint: color-mix(in srgb, var(--color-expense) 8%, var(--color-bg));
+  --color-income-tint: color-mix(in srgb, var(--color-income) 8%, var(--color-bg));
+
+  /* Linhas. --color-control-line (55%) é o contorno de campos e botões
+     secundários: 3,3:1, acima dos 3:1 pedidos para elementos não textuais. */
+  --color-line: color-mix(in srgb, var(--color-ink) 15%, transparent);
+  --color-line-strong: color-mix(in srgb, var(--color-ink) 35%, transparent);
+  --color-control-line: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --color-panel-line: color-mix(in srgb, var(--color-bg) 18%, transparent);
+
+  /* Tinta em estados de botões principais. */
+  --color-ink-hover: color-mix(in srgb, var(--color-ink) 88%, var(--color-bg));
+  --color-ink-pressed: color-mix(in oklab, var(--color-ink) 82%, black);
+  --color-focus: var(--color-ink);
+
+  /* Cabeçalho da app. Para testar a faixa em tinta:
+       --color-header-bg: var(--color-panel);
+       --color-header-ink: var(--color-bg);
+       --color-header-ink-soft: color-mix(in srgb, var(--color-bg) 72%, transparent);
+       --color-header-rule: var(--color-panel);
+     (texto suave a 7,1:1 sobre a tinta) */
+  --color-header-bg: var(--color-bg);
+  --color-header-ink: var(--color-ink);
+  --color-header-ink-soft: var(--color-ink-soft);
+  --color-header-rule: var(--color-ink);
+
+  /* Tipografia */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Espaçamento */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* Layout: cabeçalho e conteúdo partilham o mesmo container. */
+  --container: 880px;
+  --gutter: clamp(1rem, 4vw, 2rem);
+
+  /* Movimento */
+  --duration: 160ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 * {
@@ -28,6 +86,8 @@ body {
   font-family: var(--font-mono);
   font-size: 15px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
@@ -35,13 +95,28 @@ h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 600;
+  font-optical-sizing: auto;
+  line-height: 1.15;
   margin: 0;
 }
 
-button {
-  font-family: var(--font-mono);
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
 }
 
 a {
   color: inherit;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-bg);
 }
