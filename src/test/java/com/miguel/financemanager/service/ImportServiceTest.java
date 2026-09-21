@@ -137,7 +137,7 @@ class ImportServiceTest {
     @Test
     void confirmImport_delegatesToWriterForCurrentUser() {
         ConfirmImportRequest request = new ConfirmImportRequest();
-        ImportSummaryResponse summary = new ImportSummaryResponse(1L, "x.csv", 2, 0);
+        ImportSummaryResponse summary = new ImportSummaryResponse(1L, "x.csv", 2, 0, 0);
         when(importWriter.write(user, request)).thenReturn(summary);
 
         assertThat(importService.confirmImport(request)).isSameAs(summary);
@@ -147,7 +147,7 @@ class ImportServiceTest {
     @Test
     void confirmImport_retriesOnceWhenUniqueIndexIsViolated() {
         ConfirmImportRequest request = new ConfirmImportRequest();
-        ImportSummaryResponse summary = new ImportSummaryResponse(2L, "x.csv", 1, 1);
+        ImportSummaryResponse summary = new ImportSummaryResponse(2L, "x.csv", 1, 1, 0);
         when(importWriter.write(user, request))
                 .thenThrow(new DataIntegrityViolationException("uq_transactions_user_hash"))
                 .thenReturn(summary);

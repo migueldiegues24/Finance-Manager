@@ -22,6 +22,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
     }
 
+    @ExceptionHandler(DuplicateResolutionException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateResolution(DuplicateResolutionException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+    }
+
     // Qualquer outra violação de integridade (ex.: índice único) é um conflito
     // com dados existentes, não um erro interno.
     @ExceptionHandler(DataIntegrityViolationException.class)

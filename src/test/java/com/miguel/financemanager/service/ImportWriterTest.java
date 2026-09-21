@@ -8,6 +8,7 @@ import com.miguel.financemanager.entity.CategorizationRule;
 import com.miguel.financemanager.entity.StatementImport;
 import com.miguel.financemanager.entity.Transaction;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.DuplicateResolutionException;
 import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.StatementImportRepository;
@@ -249,6 +250,44 @@ class ImportWriterTest {
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
         verify(transactionRepository).save(captor.capture());
         assertThat(captor.getValue().getCategory()).isEqualTo(mbway);
+    }
+
+    @Test
+    void write_forcedDuplicateUsesNextOccurrenceAfterExistingMaximum() {
+        stubConfirmDependencies();
+        LocalDate day = LocalDate.of(2026, 9, 1);
+        String occ0 = TransactionFingerprint.compute(1L, day, null, "Cafe", new BigDecimal("-1.20"), null, 0);
+        String occ1 = TransactionFingerprint.compute(1L, day, null, "Cafe", new BigDecimal("-1.20"), null, 1);
+        when(transactionRepository.existsByUserAndHash(user, occ0)).thenReturn(true);
+        when(transactionRepository.findHashesWithSameFields(eq(user), eq(day), eq(null), eq("Cafe"), any(), eq(null)))
+                .thenReturn(List.of(occ0, occ1));
+        ConfirmTransactionRequest forced = confirmTx(day, "Cafe", "-1.20");
+        forced.setAllowDuplicate(true);
+
+        ImportSummaryResponse response = importWriter.write(user, confirmRequest(forced));
+
+        assertThat(response.getImportedAsDuplicate()).isEqualTo(1);
+        ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepository).save(captor.capture());
+        assertThat(captor.getValue().getHash())
+                .isEqualTo(TransactionFingerprint.compute(1L, day, null, "Cafe", new BigDecimal("-1.20"), null, 2));
+    }
+
+    @Test
+    void write_forcedDuplicateFailsWhenStoredHashesAreNotRecognised() {
+        stubConfirmDependencies();
+        LocalDate day = LocalDate.of(2026, 9, 1);
+        String occ0 = TransactionFingerprint.compute(1L, day, null, "Cafe", new BigDecimal("-1.20"), null, 0);
+        when(transactionRepository.existsByUserAndHash(user, occ0)).thenReturn(true);
+        when(transactionRepository.findHashesWithSameFields(eq(user), eq(day), eq(null), eq("Cafe"), any(), eq(null)))
+                .thenReturn(List.of(occ0, "desconhecido"));
+        ConfirmTransactionRequest forced = confirmTx(day, "Cafe", "-1.20");
+        forced.setAllowDuplicate(true);
+
+        assertThat(catchException(() -> importWriter.write(user, confirmRequest(forced))))
+                .isInstanceOf(DuplicateResolutionException.class)
+                .hasMessageContaining("só 1 correspondem");
+        verify(transactionRepository, org.mockito.Mockito.never()).save(any(Transaction.class));
     }
 
     private void stubConfirmDependencies() {
