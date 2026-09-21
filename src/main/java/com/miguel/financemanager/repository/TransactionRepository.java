@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -24,6 +25,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "WHERE t.user = :user AND t.amount < 0 AND t.transactionDate >= :start AND t.transactionDate < :end " +
             "GROUP BY t.category.id, t.category.name")
     List<Object[]> sumExpensesByCategory(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    // Soma das receitas (amount > 0) no intervalo; null se não houver nenhuma.
+    @Query("SELECT SUM(t.amount) FROM Transaction t " +
+            "WHERE t.user = :user AND t.amount > 0 AND t.transactionDate >= :start AND t.transactionDate < :end")
+    BigDecimal sumIncome(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    // Soma das despesas (amount < 0, portanto negativa) no intervalo; null se não houver nenhuma.
+    @Query("SELECT SUM(t.amount) FROM Transaction t " +
+            "WHERE t.user = :user AND t.amount < 0 AND t.transactionDate >= :start AND t.transactionDate < :end")
+    BigDecimal sumExpenses(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    // Cada linha: [ano (Integer), mês (Integer)] com pelo menos uma transação do utilizador.
+    @Query("SELECT DISTINCT YEAR(t.transactionDate), MONTH(t.transactionDate) FROM Transaction t WHERE t.user = :user")
+    List<Object[]> findDistinctYearMonths(@Param("user") User user);
 
     // Usado quando uma categoria é apagada: todas as transações que
     // apontavam para ela passam a apontar para a categoria fallback

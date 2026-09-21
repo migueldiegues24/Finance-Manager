@@ -1,83 +1,125 @@
-.dashboard__month-nav {
-  display: flex;
-  align-items: baseline;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
+/* ---------- Cartões-resumo ---------- */
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
-.dashboard__month-nav h1 {
-  font-size: 2.25rem;
-  font-weight: 400;
-  min-width: 260px;
-  text-align: center;
+/* Filete de cor no topo; o valor tem sempre sinal (+/−) e rótulo. */
+.summary-card {
+  --card-rule: var(--color-ink);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border: 1px solid var(--color-line);
+  border-top: 3px solid var(--card-rule);
+  background: var(--color-row-alt);
 }
 
-.dashboard__month-nav button {
-  background: none;
-  border: none;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  cursor: pointer;
+.summary-card--income {
+  --card-rule: var(--color-income);
+}
+
+.summary-card--expense {
+  --card-rule: var(--color-expense);
+}
+
+.summary-card--net {
+  --card-rule: var(--color-ink);
+}
+
+.summary-card__label {
   color: var(--color-ink-soft);
-  line-height: 1;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
 }
 
-.dashboard__month-nav button:hover {
-  color: var(--color-ink);
-}
-
-.dashboard__status {
-  color: var(--color-ink-soft);
-  font-size: 0.95rem;
-}
-
-.dashboard__status--error {
-  color: var(--color-expense);
-}
-
-.ledger {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.ledger thead th {
-  text-align: left;
-  font-weight: 400;
-  font-size: 0.8rem;
-  color: var(--color-ink-soft);
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid var(--color-ink);
-}
-
-.ledger thead th:last-child,
-.ledger td:last-child {
-  text-align: right;
-}
-
-.ledger tbody td {
-  padding: 0.85rem 0;
-  border-bottom: 1px solid var(--color-line);
-  font-size: 1rem;
-}
-
-.ledger__amount {
-  font-family: var(--font-mono);
-  color: var(--color-expense);
-}
-
-.ledger__amount--income {
-  color: var(--color-income);
-}
-
-.ledger tfoot td {
-  padding-top: 1.1rem;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  border-top: 3px double var(--color-ink);
-}
-
-.ledger tfoot .ledger__amount {
-  font-family: var(--font-mono);
+.summary-card__value {
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.7rem);
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.summary-card__caption {
+  margin-top: var(--space-1);
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+}
+
+/* ---------- Despesas por categoria ---------- */
+
+.dashboard__categories {
+  margin-top: var(--space-7);
+}
+
+.dashboard__category {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dashboard__category-name {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dashboard__categorize {
+  font-size: 0.8rem;
+}
+
+.dashboard__share {
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
+  width: 4.5rem;
+}
+
+/* Barra decorativa (aria-hidden); a percentagem está escrita na coluna ao lado. */
+.share-bar {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  height: 3px;
+  background: var(--color-line);
+}
+
+.share-bar__fill {
+  display: block;
+  height: 100%;
+  background: var(--category-color, var(--color-ink));
+}
+
+.share-bar--attention .share-bar__fill {
+  background: var(--color-attention);
+}
+
+@media (max-width: 640px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .summary-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .summary-card__label {
+    margin-bottom: 0;
+  }
+
+  .summary-card__caption {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard__share {
+    width: auto;
+  }
 }

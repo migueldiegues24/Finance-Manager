@@ -1,75 +1,160 @@
-.import-page__title {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 400;
-  margin-bottom: 0.5rem;
-}
-
-.import-page__subtitle {
-  color: var(--color-ink-soft);
-  font-size: 0.9rem;
-  margin: 0 0 2rem;
-}
-
 .import-page__upload {
   display: flex;
-  gap: 1rem;
-  align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 2.5rem;
-}
-
-.import-page__file-label {
-  border: 1px solid var(--color-line);
-  padding: 0.65rem 1.1rem;
-  cursor: pointer;
-  font-size: 0.9rem;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-7);
 }
 
 .import-page__bank {
-  border: 1px solid var(--color-line);
-  background: transparent;
-  color: inherit;
-  padding: 0.65rem 0.9rem;
-  font: inherit;
-  font-size: 0.9rem;
+  width: auto;
+  min-width: 10rem;
 }
 
-.import-page__upload button {
-  background: var(--color-ink);
-  color: var(--color-bg);
-  border: none;
-  padding: 0.65rem 1.3rem;
-  cursor: pointer;
-  font-size: 0.9rem;
+.import-page__file-label {
+  max-width: 100%;
 }
 
-.import-page__upload button:disabled {
-  opacity: 0.5;
-  cursor: default;
+/* O input de ficheiro está escondido visualmente; o foco de teclado
+   aparece no rótulo que o contém. */
+.import-page__file-label:has(input:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.import-page__file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .import-page__result {
-  color: var(--color-income);
-  margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.import-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.import-page__count {
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
+}
+
+.import-page__select {
+  display: flex;
+  gap: var(--space-1);
 }
 
 .import-page__duplicate-tag {
-  color: var(--color-ink-soft);
-  font-size: 0.8rem;
+  margin-left: var(--space-2);
 }
 
-.import-page__confirm {
-  margin-top: 1.5rem;
-  background: var(--color-ink);
-  color: var(--color-bg);
-  border: none;
-  padding: 0.75rem 1.5rem;
+.import-table .is-duplicate .ledger__cell--desc,
+.import-table .is-duplicate .ledger__cell--amount {
+  color: var(--color-ink-soft);
+}
+
+.import-table input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--color-ink);
   cursor: pointer;
+}
+
+.import-table input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+/* ---------- Barra fixa de confirmação ---------- */
+
+.import-page__review {
+  --import-bar-height: 4.75rem;
+  /* Espaço para a barra fixa não tapar as últimas linhas. */
+  padding-bottom: calc(var(--import-bar-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.import-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-top: 3px double var(--color-ink);
+  background: var(--color-bg);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+
+.import-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--import-bar-height);
+  padding-block: var(--space-3);
+}
+
+.import-bar__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-bar__totals {
+  display: inline-flex;
+  gap: var(--space-3);
   font-size: 0.9rem;
 }
 
-.import-page__confirm:disabled {
-  opacity: 0.5;
-  cursor: default;
+.import-bar__confirm {
+  min-height: 2.9rem;
+  padding-inline: var(--space-6);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .import-page__upload > * {
+    flex: 1 1 100%;
+  }
+
+  .import-page__bank {
+    min-width: 0;
+  }
+
+  .import-table tbody tr {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check desc amount"
+      "check date balance";
+  }
+
+  .import-table input[type="checkbox"] {
+    margin-top: 0.3rem;
+  }
+
+  .import-page__review {
+    --import-bar-height: 7.5rem;
+  }
+
+  .import-bar__inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .import-bar__confirm {
+    width: 100%;
+  }
 }

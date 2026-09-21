@@ -71,6 +71,52 @@ class DashboardServiceTest {
     }
 
     @Test
+    void getMonthlySummary_computesIncomeExpensesAndNet() {
+        when(transactionRepository.sumExpensesByCategory(eq(user), any(), any())).thenReturn(List.of());
+        when(transactionRepository.sumIncome(eq(user), any(), any())).thenReturn(new BigDecimal("1200.00"));
+        when(transactionRepository.sumExpenses(eq(user), any(), any())).thenReturn(new BigDecimal("-1508.50"));
+
+        DashboardSummaryResponse response = dashboardService.getMonthlySummary(YearMonth.of(2026, 9));
+
+        assertThat(response.getTotalIncome()).isEqualByComparingTo("1200.00");
+        assertThat(response.getTotalExpenses()).isEqualByComparingTo("1508.50");
+        assertThat(response.getNet()).isEqualByComparingTo("-308.50");
+    }
+
+    @Test
+    void getMonthlySummary_treatsMissingSumsAsZero() {
+        when(transactionRepository.sumExpensesByCategory(eq(user), any(), any())).thenReturn(List.of());
+        when(transactionRepository.sumIncome(eq(user), any(), any())).thenReturn(null);
+        when(transactionRepository.sumExpenses(eq(user), any(), any())).thenReturn(null);
+
+        DashboardSummaryResponse response = dashboardService.getMonthlySummary(YearMonth.of(2026, 9));
+
+        assertThat(response.getTotalIncome()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.getTotalExpenses()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.getNet()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void getMonthsWithTransactions_formatsAndSortsAscending() {
+        List<Object[]> rows = List.of(
+                new Object[]{2026, 9},
+                new Object[]{2025, 12},
+                new Object[]{2026, 1}
+        );
+        when(transactionRepository.findDistinctYearMonths(user)).thenReturn(rows);
+
+        assertThat(dashboardService.getMonthsWithTransactions())
+                .containsExactly("2025-12", "2026-01", "2026-09");
+    }
+
+    @Test
+    void getMonthsWithTransactions_returnsEmptyListWhenUserHasNoTransactions() {
+        when(transactionRepository.findDistinctYearMonths(user)).thenReturn(List.of());
+
+        assertThat(dashboardService.getMonthsWithTransactions()).isEmpty();
+    }
+
+    @Test
     void getMonthlySummary_returnsZeroOverallTotalWhenNoExpenses() {
         when(transactionRepository.sumExpensesByCategory(eq(user), any(), any())).thenReturn(List.of());
 
