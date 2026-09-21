@@ -1,15 +1,22 @@
 /* ---------- Cartões-resumo ---------- */
 
-.summary-cards {
+/* Balanço em destaque, a toda a largura; receitas e despesas por baixo. */
+.summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.summary__secondary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
 /* Filete de cor no topo; o valor tem sempre sinal (+/−) e rótulo. */
 .summary-card {
   --card-rule: var(--color-ink);
-  padding: var(--space-4) var(--space-5) var(--space-5);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--color-line);
   border-top: 3px solid var(--card-rule);
   background: var(--color-row-alt);
@@ -23,8 +30,22 @@
   --card-rule: var(--color-expense);
 }
 
+/* Balanço: filete e valor seguem o sinal; zero fica a tinta.
+   Contraste do valor sobre --color-row-alt: verde 4,86:1, vermelho 6,84:1. */
 .summary-card--net {
-  --card-rule: var(--color-ink);
+  --net-color: var(--color-ink);
+  --card-rule: var(--net-color);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  /* O tamanho do valor acompanha a largura do cartão (cqi), não da janela. */
+  container-type: inline-size;
+}
+
+.summary-card--positive {
+  --net-color: var(--color-income);
+}
+
+.summary-card--negative {
+  --net-color: var(--color-expense);
 }
 
 .summary-card__label {
@@ -36,16 +57,20 @@
 }
 
 .summary-card__value {
-  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.7rem);
+  font-size: clamp(1.2rem, 1rem + 0.8vw, 1.45rem);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
-.summary-card__caption {
-  margin-top: var(--space-1);
-  color: var(--color-ink-soft);
-  font-size: 0.8rem;
+/* IBM Plex Mono tem ~0,6em por carácter: a 11cqi, "−12 345,67 €" (12
+   caracteres) ocupa ~79% da largura útil, por isso nunca parte nem transborda. */
+.summary-card__value--hero {
+  color: var(--net-color);
+  font-size: clamp(1.75rem, 11cqi, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 /* ---------- Despesas por categoria ---------- */
@@ -98,25 +123,25 @@
 }
 
 @media (max-width: 640px) {
-  .summary-cards {
+  .summary__secondary {
     grid-template-columns: 1fr;
     gap: var(--space-3);
   }
 
-  .summary-card {
-    display: grid;
-    grid-template-columns: 1fr auto;
+  .summary-card--net {
+    padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+
+  .summary__secondary .summary-card {
+    display: flex;
     align-items: baseline;
-    column-gap: var(--space-3);
+    justify-content: space-between;
+    gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
   }
 
-  .summary-card__label {
+  .summary__secondary .summary-card__label {
     margin-bottom: 0;
-  }
-
-  .summary-card__caption {
-    grid-column: 1 / -1;
   }
 
   .dashboard__share {
