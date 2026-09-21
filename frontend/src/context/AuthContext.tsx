@@ -20,7 +20,7 @@ async function requestTokens(path: "login" | "register", email: string, password
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.error ?? "Algo correu mal");
+    throw new Error(body.error ?? "Algo correu mal. Tenta de novo.");
   }
 
   return response.json();

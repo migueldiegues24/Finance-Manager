@@ -16,10 +16,8 @@ export default function EmptyMonth({ month, onChange }: EmptyMonthProps) {
 
   return (
     <div className="empty-state">
-      <h2 className="empty-state__title">Ainda não há movimentos em {formatMonthLabel(month).toLowerCase()}</h2>
-      <p className="empty-state__text">
-        Importa o extrato do banco para ver as receitas, as despesas e o balanço deste mês.
-      </p>
+      <h2 className="empty-state__title">Sem movimentos em {formatMonthLabel(month).toLowerCase()}.</h2>
+      <p className="empty-state__text">Importa um extrato para ver este mês.</p>
       <div className="empty-state__actions">
         <Link className="btn btn--primary" to="/import">
           Importar extrato

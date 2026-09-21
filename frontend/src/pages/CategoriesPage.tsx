@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../api/client";
-import { readApiError } from "../api/errors";
 import AppLayout from "../components/AppLayout";
 import CategoryDialog from "../components/CategoryDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { categoryStyle } from "../utils/categoryColor";
 import "./CategoriesPage.css";
+import Notice from "../components/Notice";
+import { AppError, apiFailure, toNotice, type NoticeContent } from "../api/errors";
 
 interface Category {
   id: number;
@@ -15,7 +16,7 @@ interface Category {
 
 async function fetchCategories(): Promise<Category[]> {
   const res = await apiFetch("/categories");
-  if (!res.ok) throw new Error("Não foi possível carregar as categorias");
+  if (!res.ok) throw new AppError("Não foi possível carregar as categorias.");
   return res.json();
 }
 
@@ -27,7 +28,7 @@ interface DialogState {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NoticeContent | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [toDelete, setToDelete] = useState<Category | null>(null);
   const newButtonRef = useRef<HTMLButtonElement>(null);
@@ -45,7 +46,7 @@ export default function CategoriesPage() {
         if (!cancelled) setCategories(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Algo correu mal");
+        if (!cancelled) setError(toNotice(err));
       });
     return () => {
       cancelled = true;
@@ -58,7 +59,7 @@ export default function CategoriesPage() {
 
   async function deleteCategory(category: Category) {
     const res = await apiFetch(`/categories/${category.id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error((await readApiError(res)) ?? "Não foi possível apagar a categoria");
+    if (!res.ok) throw await apiFailure(res, "Não foi possível apagar a categoria.");
     await reload();
   }
 
@@ -68,15 +69,15 @@ export default function CategoriesPage() {
         <div>
           <p className="page-header__eyebrow">Configuração</p>
           <h1 className="page-header__title">Categorias</h1>
-          <p className="page-header__subtitle">As categorias protegidas não podem ser renomeadas nem apagadas.</p>
+          <p className="page-header__subtitle">A categoria protegida não pode ser alterada.</p>
         </div>
         <button ref={newButtonRef} type="button" className="btn btn--primary" onClick={() => openDialog(null)}>
           Nova categoria
         </button>
       </header>
 
-      {error && <p className="status status--error" role="alert">{error}</p>}
-      {categories === null && !error && <p className="status" role="status">A carregar…</p>}
+      {error && <Notice tone="error" title={error.title} detail={error.detail} />}
+      {categories === null && !error && <Notice title="A carregar…" />}
 
       {categories && (
         <table className="ledger">
@@ -145,7 +146,7 @@ export default function CategoriesPage() {
       <ConfirmDialog
         open={toDelete !== null}
         title="Apagar a categoria?"
-        description={'As transações associadas passam para "Sem Categoria".'}
+        description={`Os movimentos passam para ${categories?.find((c) => c.defaultCategory)?.name ?? "Sem Categoria"}.`}
         confirmLabel="Apagar"
         destructive
         onConfirm={() => deleteCategory(toDelete!)}
