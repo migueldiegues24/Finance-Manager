@@ -1,8 +1,13 @@
 .color-picker {
   min-width: 0;
-  margin: 0;
+  margin: var(--space-5) 0 0;
   padding: 0;
   border: none;
+}
+
+/* A legenda de um fieldset tem recuo próprio; alinha-a com as outras labels. */
+.color-picker > legend {
+  padding: 0;
 }
 
 .color-picker__swatches {

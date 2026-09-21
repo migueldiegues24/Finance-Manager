@@ -98,12 +98,8 @@ export default function ColorPicker({ value, onChange, previewName, categoryId }
       )}
 
       <div className="color-picker__actions">
-        <button
-          type="button"
-          className="btn btn--link"
-          onClick={() => onChange({ kind: "auto" })}
-          disabled={value.kind === "auto"}
-        >
+        {/* Sempre ativo: desativá-lo depois do clique faria o foco cair para o body. */}
+        <button type="button" className="btn btn--link" onClick={() => onChange({ kind: "auto" })}>
           Usar cor automática
         </button>
       </div>
