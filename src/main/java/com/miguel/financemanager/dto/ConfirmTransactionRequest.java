@@ -1,5 +1,6 @@
 package com.miguel.financemanager.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -20,4 +21,11 @@ public class ConfirmTransactionRequest {
 
     @NotNull
     private BigDecimal amount;
+
+    private LocalDate movementDate;
+
+    private BigDecimal balanceAfter;
+
+    @Min(0)
+    private int occurrence;
 }
