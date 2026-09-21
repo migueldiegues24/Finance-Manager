@@ -27,21 +27,35 @@
   text-overflow: ellipsis;
 }
 
-.import-page__count {
+.import-page__result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.import-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
   margin-bottom: var(--space-3);
+}
+
+.import-page__count {
   color: var(--color-ink-soft);
   font-size: 0.85rem;
 }
 
+.import-page__select {
+  display: flex;
+  gap: var(--space-1);
+}
+
 .import-page__duplicate-tag {
-  display: inline-block;
   margin-left: var(--space-2);
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-line-strong);
-  color: var(--color-ink-soft);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
 }
 
 .import-table .is-duplicate .ledger__cell--desc,
@@ -61,8 +75,53 @@
   cursor: not-allowed;
 }
 
-.import-page__confirm {
-  margin-top: var(--space-5);
+/* ---------- Barra fixa de confirmação ---------- */
+
+.import-page__review {
+  --import-bar-height: 4.75rem;
+  /* Espaço para a barra fixa não tapar as últimas linhas. */
+  padding-bottom: calc(var(--import-bar-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.import-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-top: 3px double var(--color-ink);
+  background: var(--color-bg);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+
+.import-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--import-bar-height);
+  padding-block: var(--space-3);
+}
+
+.import-bar__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-bar__totals {
+  display: inline-flex;
+  gap: var(--space-3);
+  font-size: 0.9rem;
+}
+
+.import-bar__confirm {
+  min-height: 2.9rem;
+  padding-inline: var(--space-6);
+  font-size: 0.95rem;
 }
 
 @media (max-width: 640px) {
@@ -85,7 +144,17 @@
     margin-top: 0.3rem;
   }
 
-  .import-page__confirm {
+  .import-page__review {
+    --import-bar-height: 7.5rem;
+  }
+
+  .import-bar__inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .import-bar__confirm {
     width: 100%;
   }
 }
