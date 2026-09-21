@@ -5,6 +5,7 @@ import AppLayout from "../components/AppLayout";
 import EmptyMonth from "../components/EmptyMonth";
 import MonthNav from "../components/MonthNav";
 import { useMonthParam } from "../hooks/useMonthParam";
+import { useTheme } from "../theme/themeContext";
 import { categoryStyle } from "../utils/categoryColor";
 import { formatCurrency } from "../utils/format";
 import "./TransactionsPage.css";
@@ -24,11 +25,13 @@ interface Category {
   id: number;
   name: string;
   defaultCategory: boolean;
+  color?: string | null;
 }
 
 export default function TransactionsPage() {
   const [month, setMonth] = useMonthParam();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useTheme();
   const onlyUncategorized = searchParams.get("filter") === "uncategorized";
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -88,6 +91,7 @@ export default function TransactionsPage() {
   const uncategorizedCount = transactions.filter((t) => t.categoryId === uncategorizedId).length;
   const visible = onlyUncategorized ? transactions.filter((t) => t.categoryId === uncategorizedId) : transactions;
   const assignable = categories.filter((c) => c.id !== uncategorizedId);
+  const colorOf = new Map(categories.map((c) => [c.id, c.color]));
 
   function setOnlyUncategorized(value: boolean) {
     setSearchParams((prev) => {
@@ -163,7 +167,7 @@ export default function TransactionsPage() {
                       <td role="cell" className="ledger__cell--date">{t.date}</td>
                       <td role="cell" className="ledger__cell--desc">{t.description}</td>
                       <td role="cell" className="ledger__cell--category">
-                        <span className="transactions-table__category" style={categoryStyle(t.categoryId)}>
+                        <span className="transactions-table__category" style={categoryStyle(t.categoryId, colorOf.get(t.categoryId), theme)}>
                           {uncategorized ? (
                             <span className="tag tag--attention">⚠ Sem categoria</span>
                           ) : (
