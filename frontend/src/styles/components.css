@@ -59,6 +59,43 @@
   gap: var(--space-4);
 }
 
+.month-nav__anchor {
+  position: relative;
+  min-width: 0;
+}
+
+/* O título do mês é o botão que abre o seletor; mantém o aspeto de título. */
+.month-nav__trigger {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 0;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.month-nav__trigger:hover,
+.month-nav__trigger[aria-expanded="true"] {
+  border-bottom-color: var(--color-line-strong);
+}
+
+.month-nav__caret {
+  color: var(--color-accent);
+  font-size: 0.5em;
+  transition: transform var(--duration) var(--ease);
+}
+
+.month-nav__trigger[aria-expanded="true"] .month-nav__caret {
+  transform: rotate(180deg);
+}
+
 .month-nav__controls {
   display: flex;
   align-items: center;
