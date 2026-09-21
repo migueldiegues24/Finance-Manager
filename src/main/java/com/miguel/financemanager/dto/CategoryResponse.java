@@ -9,4 +9,6 @@ public class CategoryResponse {
     private Long id;
     private String name;
     private boolean defaultCategory;
+    // #RRGGBB em maiúsculas, ou null (cor automática).
+    private String color;
 }
