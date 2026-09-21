@@ -11,6 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import "./Modal.css";
 
+const FIELDS = "input:not([disabled]), select:not([disabled]), textarea:not([disabled])";
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -80,11 +81,16 @@ export default function Modal({
     };
   }, [open]);
 
-  // Foco inicial.
+  // Foco inicial: o indicado, senão o primeiro campo do conteúdo, senão o
+  // primeiro botão do rodapé (o "×" de fechar fica para o fim da lista).
   useEffect(() => {
     if (!open) return;
     const dialog = dialogRef.current;
-    const target = initialFocusRef?.current ?? dialog?.querySelector<HTMLElement>(FOCUSABLE) ?? dialog;
+    const target =
+      initialFocusRef?.current ??
+      dialog?.querySelector<HTMLElement>(`.modal__body :is(${FIELDS})`) ??
+      dialog?.querySelector<HTMLElement>(`.modal__footer :is(${FOCUSABLE})`) ??
+      dialog;
     target?.focus();
   }, [open, initialFocusRef]);
 
