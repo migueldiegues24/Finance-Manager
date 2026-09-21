@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiFetch } from "../api/client";
 import AppLayout from "../components/AppLayout";
+import { categoryStyle } from "../utils/categoryColor";
 import "./CategoriesPage.css";
 
 interface Category {
@@ -30,6 +31,7 @@ export default function CategoriesPage() {
   const [editingName, setEditingName] = useState("");
 
   const [newRuleKeyword, setNewRuleKeyword] = useState("");
+  const keywordInputRef = useRef<HTMLInputElement>(null);
   const [newRuleCategoryId, setNewRuleCategoryId] = useState("");
   const [creatingRule, setCreatingRule] = useState(false);
 
@@ -200,8 +202,13 @@ export default function CategoriesPage() {
                       onChange={(e) => setEditingName(e.target.value)}
                       autoFocus
                     />
+                  ) : category.defaultCategory ? (
+                    <span className="tag tag--attention">⚠ {category.name}</span>
                   ) : (
-                    category.name
+                    <span className="label-with-dot" style={categoryStyle(category.id)}>
+                      <span className="dot" aria-hidden="true" />
+                      {category.name}
+                    </span>
                   )}
                 </td>
                 <td className="categories-page__actions">
@@ -254,33 +261,53 @@ export default function CategoriesPage() {
           Maiúsculas e acentos são ignorados.
         </p>
 
-        <table className="ledger">
-          <thead>
-            <tr>
-              <th>Palavra-chave</th>
-              <th>Categoria</th>
-              <th>
-                <span className="visually-hidden">Ações</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rules.map((rule) => (
-              <tr key={rule.id}>
-                <td>{rule.keyword}</td>
-                <td>{rule.categoryName}</td>
-                <td className="categories-page__actions">
-                  <button className="btn btn--link btn--danger" onClick={() => deleteRule(rule.id)}>
-                    Apagar
-                  </button>
-                </td>
+        {rules.length === 0 ? (
+          <div className="empty-state categories-page__empty">
+            <h3 className="empty-state__title">Ainda não há regras</h3>
+            <p className="empty-state__text">
+              Sem regras, os movimentos importados vão para "Outros". Por exemplo, a palavra-chave "continente" pode
+              enviar as compras do supermercado para Alimentação.
+            </p>
+            <div className="empty-state__actions">
+              <button type="button" className="btn btn--primary" onClick={() => keywordInputRef.current?.focus()}>
+                Criar a primeira regra
+              </button>
+            </div>
+          </div>
+        ) : (
+          <table className="ledger">
+            <thead>
+              <tr>
+                <th>Palavra-chave</th>
+                <th>Categoria</th>
+                <th>
+                  <span className="visually-hidden">Ações</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rules.map((rule) => (
+                <tr key={rule.id}>
+                  <td>{rule.keyword}</td>
+                  <td>
+                    <span className="tag" style={categoryStyle(rule.categoryId)}>
+                      {rule.categoryName}
+                    </span>
+                  </td>
+                  <td className="categories-page__actions">
+                    <button className="btn btn--link btn--danger" onClick={() => deleteRule(rule.id)}>
+                      Apagar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         <form className="categories-page__form" onSubmit={handleCreateRule}>
           <input
+            ref={keywordInputRef}
             className="field"
             aria-label="Palavra-chave"
             placeholder="Palavra-chave"
