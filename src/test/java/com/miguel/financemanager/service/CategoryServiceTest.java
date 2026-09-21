@@ -50,7 +50,7 @@ class CategoryServiceTest {
     @Test
     void listCategories_mapsEntitiesToResponses() {
         Category category = Category.builder().id(10L).user(user).name("Alimentação").isDefault(false).build();
-        when(categoryRepository.findByUser(user)).thenReturn(List.of(category));
+        when(categoryRepository.findByUserOrderByIsDefaultAscIdAsc(user)).thenReturn(List.of(category));
 
         List<CategoryResponse> result = categoryService.listCategories();
 
