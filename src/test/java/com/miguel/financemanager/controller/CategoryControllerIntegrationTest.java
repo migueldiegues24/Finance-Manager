@@ -254,4 +254,21 @@ class CategoryControllerIntegrationTest {
         mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
                 .andExpect(jsonPath("$[?(@.name == 'Minha')].color").value("#1F5E6B"));
     }
+
+    @Test
+    void newCategoryIsListedBeforeTheProtectedOne() throws Exception {
+        createCategory(accessToken, Map.of("name", "Nova no fim"));
+
+        MvcResult list = mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        com.fasterxml.jackson.databind.JsonNode categories = objectMapper.readTree(list.getResponse().getContentAsString());
+        int last = categories.size() - 1;
+
+        org.assertj.core.api.Assertions.assertThat(categories.get(last).get("defaultCategory").asBoolean()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(categories.get(last - 1).get("name").asText()).isEqualTo("Nova no fim");
+        for (int i = 0; i < last; i++) {
+            org.assertj.core.api.Assertions.assertThat(categories.get(i).get("defaultCategory").asBoolean()).isFalse();
+        }
+    }
 }

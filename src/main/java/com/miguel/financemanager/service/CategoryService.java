@@ -25,7 +25,7 @@ public class CategoryService {
 
     public List<CategoryResponse> listCategories() {
         User user = currentUserService.getCurrentUser();
-        return categoryRepository.findByUser(user).stream()
+        return categoryRepository.findByUserOrderByIsDefaultAscIdAsc(user).stream()
                 .map(this::toResponse)
                 .toList();
     }
