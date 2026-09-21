@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: "/transactions", label: "Transações", keepMonth: true },
   { to: "/import", label: "Importar", keepMonth: false },
   { to: "/categories", label: "Categorias", keepMonth: false },
+  { to: "/rules", label: "Regras", keepMonth: false },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {

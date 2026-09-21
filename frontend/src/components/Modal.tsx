@@ -25,6 +25,9 @@ interface ModalProps {
   footer?: ReactNode;
   // Elemento que recebe o foco ao abrir; por omissão o primeiro focável.
   initialFocusRef?: RefObject<HTMLElement | null>;
+  // Recebe o foco ao fechar se o elemento que abriu o diálogo já não existir
+  // (ex.: o botão "Apagar" de uma linha que foi apagada).
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }
 
 // Diálogo modal acessível e reutilizável:
@@ -32,16 +35,27 @@ interface ModalProps {
 // - foco preso lá dentro; ao fechar volta ao elemento que o abriu;
 // - Esc e clique no fundo fecham;
 // - o resto da página fica inert e sem scroll enquanto está aberto.
-export default function Modal({ open, title, onClose, children, description, footer, initialFocusRef }: ModalProps) {
+export default function Modal({
+  open,
+  title,
+  onClose,
+  children,
+  description,
+  footer,
+  initialFocusRef,
+  returnFocusRef,
+}: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const pressedOnBackdrop = useRef(false);
   // Guardado numa ref para o efeito de abertura não depender de onClose.
   const onCloseRef = useRef(onClose);
+  const returnFocusRefRef = useRef(returnFocusRef);
   useEffect(() => {
     onCloseRef.current = onClose;
-  }, [onClose]);
+    returnFocusRefRef.current = returnFocusRef;
+  }, [onClose, returnFocusRef]);
 
   // Bloqueia o fundo (scroll e interação) e devolve o foco ao fechar.
   useLayoutEffect(() => {
@@ -61,7 +75,8 @@ export default function Modal({ open, title, onClose, children, description, foo
       body.style.overflow = previous.overflow;
       body.style.paddingRight = previous.paddingRight;
       if (root) root.inert = false;
-      previouslyFocused?.focus();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+      else returnFocusRefRef.current?.current?.focus();
     };
   }, [open]);
 
