@@ -88,3 +88,12 @@
     flex: 1 1 auto;
   }
 }
+
+.modal__status {
+  margin-bottom: var(--space-4);
+}
+
+.dialog-form {
+  display: grid;
+  gap: var(--space-5);
+}

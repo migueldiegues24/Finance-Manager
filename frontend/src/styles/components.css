@@ -9,6 +9,15 @@
   margin-bottom: var(--space-7);
 }
 
+/* Cabeçalho com uma ação principal à direita (ex.: "Nova categoria"). */
+.page-header--with-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
 .page-header__eyebrow {
   font-family: var(--font-mono);
   font-size: 0.72rem;
