@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AuthProvider } from "./context/AuthContext";
 import ThemeProvider from "./theme/ThemeProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
           <Analytics />
+          <SpeedInsights />
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
