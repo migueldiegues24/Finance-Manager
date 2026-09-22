@@ -78,3 +78,5 @@
   expirar, embora já não esteja em nenhum browser. Resolve-se com a
   revogação por família do ponto anterior.
   _Registado a 2026-09-21, na fix/session-refresh._
+
+<!-- teste de deploy com repositório privado, 22/09/2026 -->
