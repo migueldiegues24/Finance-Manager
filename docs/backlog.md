@@ -23,30 +23,60 @@
 
 ## Autenticação (frontend e backend)
 
-- **Renovação concorrente da sessão perde a sessão.** O refresh token roda a
-  cada uso e só pode ser usado uma vez (`RefreshTokenService.consumeRefreshToken`
-  revoga-o e emite um novo). Se duas renovações partirem ao mesmo tempo com o
-  mesmo token, a segunda falha com "Refresh token já foi utilizado" e o
-  frontend limpa a sessão. Acontece:
-  - em desenvolvimento, porque o `StrictMode` corre duas vezes o efeito do
-    `AuthProvider` que renova a sessão ao carregar a página;
-  - em produção, com dois separadores a carregar (ou a renovar após um 401
-    no `apiFetch`) ao mesmo tempo, porque partilham o token do `localStorage`.
+- ~~**Renovação concorrente da sessão perde a sessão.**~~ **Resolvido** na
+  `fix/session-refresh` (2026-09-21), só no frontend (`api/session.ts`):
+  renovação única por separador (promessa partilhada, limpa ao terminar),
+  `navigator.locks` entre separadores com releitura do par guardado dentro
+  do bloqueio (sem `navigator.locks` fica o single-flight), só 400/401 do
+  `/auth/refresh` terminam a sessão (rede, timeout e 5xx mantêm os tokens e
+  mostram "Sem ligação" no arranque), um 401 renova e repete o pedido uma
+  só vez, e o logout ou a troca de conta noutro separador propagam-se pelo
+  evento `storage`. Testes em `api/session.test.ts`; verificado num Chrome
+  com dois separadores contra o build de produção.
 
-  Ideias a avaliar (podem combinar-se):
-  - **Renovação única por separador:** uma só promessa de renovação
-    partilhada em `api/client.ts`, usada tanto pelo `AuthProvider` como pelo
-    `apiFetch`; resolve o caso do `StrictMode` e de pedidos em paralelo.
-  - **Coordenação entre separadores:** `navigator.locks` (só um separador
-    renova de cada vez; os outros releem o token do `localStorage` depois
-    do lock) ou `BroadcastChannel` para partilhar o par de tokens novo.
-  - **Backend:** janela de tolerância curta (alguns segundos) em que o token
-    acabado de rodar ainda é aceite e devolve o mesmo par novo, sem abrir
-    reutilização indefinida; exige guardar a ligação ao token sucessor.
+- **Tokens em armazenamento acessível a scripts.** O par (access e refresh
+  token) está no `localStorage`, numa só chave JSON (`fm.auth.tokens`); um
+  XSS pode lê-lo. O refresh token já lá estava antes; o access token passou
+  a estar para os separadores partilharem a renovação. Alternativa: refresh
+  token num cookie `HttpOnly; Secure; SameSite=Strict` com o caminho
+  `/api/auth`, e o access token só em memória (exige mudar o backend, CORS
+  com credenciais e proteção CSRF nos endpoints do cookie).
+  _Registado a 2026-09-21, na fix/session-refresh._
 
-  Validar com um teste que dispare duas renovações em simultâneo (dois
-  separadores no Chrome, ou o `StrictMode` em desenvolvimento).
-  _Registado a 2026-09-21, na feat/auth-ui-and-theme._
+- **Resposta perdida depois de o servidor rodar o token.** Se a resposta do
+  `/auth/refresh` se perder (rede cai, timeout de 10 s no frontend) depois
+  de o servidor já ter revogado o token, o frontend mantém o token antigo e
+  a renovação seguinte dá 400, o que termina a sessão. Precisa de uma
+  janela de tolerância no backend (alguns segundos em que o token acabado
+  de rodar devolve o mesmo sucessor), a desenhar em conjunto com os dois
+  pontos seguintes. _Registado a 2026-09-21, na fix/session-refresh._
 
+- **Consumo do refresh token não é transacional.** `consumeRefreshToken`
+  lê, verifica `revoked` e grava sem `@Transactional` nem bloqueio de linha
+  (nem `AuthService.refresh`): dois pedidos exatamente simultâneos com o
+  mesmo token podem ambos passar e emitir dois pares. Usar
+  `UPDATE ... SET revoked = true WHERE token_hash = ? AND revoked = false`
+  (e contar linhas) ou `SELECT ... FOR UPDATE`, dentro de uma transação.
+  _Registado a 2026-09-21, na fix/session-refresh._
 
-  <!-- teste de deploy com repositório privado, 22/09/2026 -->
+- **Sem deteção de reutilização.** Reutilizar um refresh token já usado só
+  dá 400; não revoga a família nem as outras sessões do utilizador, por
+  isso um token roubado e usado primeiro pelo atacante continua válido.
+  Guardar a ligação ao token sucessor (família) e, fora da janela de
+  tolerância, revogar a família inteira ao detetar reutilização.
+  _Registado a 2026-09-21, na fix/session-refresh._
+
+- **Refresh tokens usados nunca são apagados.** A tabela `refresh_tokens`
+  cresce a cada renovação (a cada 15 min por sessão ativa) e os revogados
+  ficam para sempre. Tarefa agendada que apague os expirados (e os
+  revogados há mais de N dias, mantendo o rasto que se quiser para
+  investigação de abuso). _Registado a 2026-09-21, na fix/session-refresh._
+
+- **Logout durante uma renovação noutro separador.** O logout revoga o
+  refresh token que o separador conhece; se outro separador o tiver rodado
+  no mesmo instante, o sucessor fica válido no servidor (órfão) até
+  expirar, embora já não esteja em nenhum browser. Resolve-se com a
+  revogação por família do ponto anterior.
+  _Registado a 2026-09-21, na fix/session-refresh._
+
+<!-- teste de deploy com repositório privado, 22/09/2026 -->
