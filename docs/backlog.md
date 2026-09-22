@@ -47,3 +47,6 @@
   Validar com um teste que dispare duas renovações em simultâneo (dois
   separadores no Chrome, ou o `StrictMode` em desenvolvimento).
   _Registado a 2026-09-21, na feat/auth-ui-and-theme._
+
+
+  <!-- teste de deploy com repositório privado, 22/09/2026 -->
