@@ -1,28 +1,34 @@
+import { isReplayableBody } from "./body";
+import { createSessionManager, SessionEndedError, type KeyValueStorage, type LockManagerLike } from "./session";
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
 
-let accessToken: string | null = null;
-let refreshToken: string | null = null;
+const REFRESH_TIMEOUT_MS = 10_000;
 
-interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export function setTokens(tokens: TokenPair | null) {
-  if (tokens) {
-    accessToken = tokens.accessToken;
-    refreshToken = tokens.refreshToken;
-    localStorage.setItem("refreshToken", tokens.refreshToken);
-  } else {
-    accessToken = null;
-    refreshToken = null;
-    localStorage.removeItem("refreshToken");
+function browserStorage(): KeyValueStorage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
   }
 }
 
-export function getRefreshToken(): string | null {
-  return refreshToken;
+function browserLocks(): LockManagerLike | null {
+  return typeof navigator !== "undefined" && navigator.locks ? navigator.locks : null;
 }
+
+// Sessão partilhada por toda a app (ver api/session.ts).
+export const session = createSessionManager({
+  storage: browserStorage(),
+  locks: browserLocks(),
+  refreshRequest: (refreshToken) =>
+    fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS),
+    }),
+});
 
 // Revoga o refresh token no servidor (POST /api/auth/logout, público, com o
 // token no corpo). Não usa o access token, por isso não importa se já
@@ -42,34 +48,7 @@ export async function revokeRefreshToken(token: string, timeoutMs = 3000): Promi
   }
 }
 
-export function loadStoredRefreshToken(): string | null {
-  refreshToken = localStorage.getItem("refreshToken");
-  return refreshToken;
-}
-
-async function refreshAccessToken(): Promise<boolean> {
-  if (!refreshToken) return false;
-
-  const response = await fetch(`${API_BASE}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
-
-  if (!response.ok) {
-    setTokens(null);
-    return false;
-  }
-
-  const data = await response.json();
-  setTokens(data);
-  return true;
-}
-
-// Wrapper de fetch para chamadas autenticadas. Junta o access token, e se a
-// resposta vier 401 (token expirado), tenta renovar uma vez com o refresh
-// token antes de desistir.
-export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+function send(path: string, options: RequestInit, accessToken: string | null): Promise<Response> {
   const headers = new Headers(options.headers);
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
@@ -77,18 +56,31 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
   if (options.body && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
+  return fetch(`${API_BASE}${path}`, { ...options, headers });
+}
 
-  let response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+// Wrapper de fetch para chamadas autenticadas. Junta o access token, e se a
+// resposta vier 401 renova a sessão uma vez (renovação partilhada com os
+// outros pedidos e separadores) e repete o pedido uma vez. Nunca em ciclo.
+// Só repete se o corpo puder ser reenviado; com uma stream devolve o 401.
+// Se a renovação falhar por rede, timeout ou 5xx, lança SessionUnavailableError
+// e os tokens mantêm-se; se o servidor recusar o refresh token, a sessão
+// termina (o AuthProvider leva ao login) e devolve o 401 original.
+export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const sentToken = session.getAccessToken();
+  const response = await send(path, options, sentToken);
 
-  if (response.status === 401 && refreshToken) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      headers.set("Authorization", `Bearer ${accessToken}`);
-      response = await fetch(`${API_BASE}${path}`, { ...options, headers });
-    }
+  if (response.status !== 401 || !session.hasSession() || !isReplayableBody(options.body)) {
+    return response;
   }
 
-  return response;
+  try {
+    await session.refresh(sentToken);
+  } catch (err) {
+    if (err instanceof SessionEndedError) return response;
+    throw err;
+  }
+  return send(path, options, session.getAccessToken());
 }
 
 export { API_BASE };
