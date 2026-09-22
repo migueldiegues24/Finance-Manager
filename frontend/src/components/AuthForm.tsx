@@ -6,6 +6,8 @@ import PasswordField from "./PasswordField";
 
 interface AuthFormProps {
   mode: "login" | "register";
+  // Registo público desligado: o login mostra uma nota em vez do link "Criar conta".
+  registrationClosed?: boolean;
 }
 
 const COPY = {
@@ -32,7 +34,7 @@ const COPY = {
 // Formulário de login e de registo. Labels visíveis, autocomplete correto,
 // foco no email ao abrir, botão desativado durante o pedido e erro curto
 // (role="alert") junto do botão.
-export default function AuthForm({ mode }: AuthFormProps) {
+export default function AuthForm({ mode, registrationClosed = false }: AuthFormProps) {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const emailId = useId();
@@ -94,7 +96,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
       </button>
 
       <p className="auth-form__switch">
-        {copy.switchText} <Link to={copy.switchTo}>{copy.switchLink}</Link>
+        {mode === "login" && registrationClosed ? (
+          "O registo de novas contas está fechado."
+        ) : (
+          <>
+            {copy.switchText} <Link to={copy.switchTo}>{copy.switchLink}</Link>
+          </>
+        )}
       </p>
     </form>
   );
