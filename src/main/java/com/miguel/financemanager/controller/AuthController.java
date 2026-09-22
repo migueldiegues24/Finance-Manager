@@ -1,5 +1,6 @@
 package com.miguel.financemanager.controller;
 
+import com.miguel.financemanager.config.RegistrationConfig;
 import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.LoginRequest;
 import com.miguel.financemanager.dto.RefreshRequest;
@@ -10,12 +11,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
+    private final RegistrationConfig registrationConfig;
+
+    // Público: o frontend usa-o para esconder o formulário de registo.
+    @GetMapping("/registration")
+    public ResponseEntity<Map<String, Boolean>> registration() {
+        return ResponseEntity.ok(Map.of("enabled", registrationConfig.isRegistrationEnabled()));
+    }
+
+    // Com o registo desligado, o RegistrationConfig recusa o pedido antes de chegar aqui.
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
