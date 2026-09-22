@@ -35,6 +35,11 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Os dados entram em conflito com registos existentes. Tenta de novo."));
     }
 
+    @ExceptionHandler(RegistrationDisabledException.class)
+    public ResponseEntity<Map<String, String>> handleRegistrationDisabled(RegistrationDisabledException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));

@@ -119,6 +119,13 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void registrationStatus_isEnabledByDefault() throws Exception {
+        mockMvc.perform(get("/api/auth/registration"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled").value(true));
+    }
+
+    @Test
     void protectedEndpoint_returns401WithoutToken() throws Exception {
         mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isUnauthorized());
