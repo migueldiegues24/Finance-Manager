@@ -34,8 +34,13 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final AuthRateLimiter authRateLimiter;
 
+    // Conta cada pedido que passa a validação, com sucesso ou com email
+    // repetido: ambos criam contas ou dizem se um email existe.
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, String clientIp) {
+        authRateLimiter.checkRegister(clientIp);
+        authRateLimiter.registerAttempted(clientIp);
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Já existe uma conta com este email");
         }
@@ -71,8 +76,15 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    public AuthResponse refresh(String rawRefreshToken) {
-        User user = refreshTokenService.consumeRefreshToken(rawRefreshToken);
+    public AuthResponse refresh(String rawRefreshToken, String clientIp) {
+        authRateLimiter.checkRefresh(clientIp);
+        User user;
+        try {
+            user = refreshTokenService.consumeRefreshToken(rawRefreshToken);
+        } catch (IllegalArgumentException e) {
+            authRateLimiter.refreshFailed(clientIp);
+            throw e;
+        }
         return issueTokens(user);
     }
 

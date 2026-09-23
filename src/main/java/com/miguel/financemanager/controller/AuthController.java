@@ -33,8 +33,8 @@ public class AuthController {
     // Com o registo desligado, o RegistrationConfig recusa o pedido antes de chegar aqui.
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        return ResponseEntity.ok(authService.register(request, clientIpResolver.resolve(http)));
     }
 
     @PostMapping("/login")
@@ -43,8 +43,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
-        return ResponseEntity.ok(authService.refresh(request.getRefreshToken()));
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request, HttpServletRequest http) {
+        return ResponseEntity.ok(authService.refresh(request.getRefreshToken(), clientIpResolver.resolve(http)));
     }
 
     @PostMapping("/logout")

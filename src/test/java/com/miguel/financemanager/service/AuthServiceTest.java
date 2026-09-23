@@ -58,7 +58,7 @@ class AuthServiceTest {
         request.setEmail("miguel@teste.com");
         request.setPassword("password123");
 
-        assertThatThrownBy(() -> authService.register(request))
+        assertThatThrownBy(() -> authService.register(request, "203.0.113.7"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Já existe");
 
@@ -76,7 +76,7 @@ class AuthServiceTest {
         request.setEmail("miguel@teste.com");
         request.setPassword("password123");
 
-        AuthResponse response = authService.register(request);
+        AuthResponse response = authService.register(request, "203.0.113.7");
 
         verify(passwordEncoder).encode("password123");
         verify(userRepository).save(any(User.class));
@@ -125,7 +125,7 @@ class AuthServiceTest {
         when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("new-access");
         when(refreshTokenService.createRefreshToken(user)).thenReturn("new-refresh");
 
-        AuthResponse response = authService.refresh("old-raw-token");
+        AuthResponse response = authService.refresh("old-raw-token", "203.0.113.7");
 
         verify(refreshTokenService).consumeRefreshToken("old-raw-token");
         assertThat(response.getAccessToken()).isEqualTo("new-access");
