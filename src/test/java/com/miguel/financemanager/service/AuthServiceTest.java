@@ -7,6 +7,7 @@ import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
+import com.miguel.financemanager.security.AuthRateLimiter;
 import com.miguel.financemanager.security.JwtService;
 import com.miguel.financemanager.security.RefreshTokenService;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,8 @@ class AuthServiceTest {
     private JwtService jwtService;
     @Mock
     private RefreshTokenService refreshTokenService;
+    @Mock
+    private AuthRateLimiter authRateLimiter;
 
     @InjectMocks
     private AuthService authService;
@@ -93,7 +96,7 @@ class AuthServiceTest {
         request.setEmail("miguel@teste.com");
         request.setPassword("errada");
 
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(request, "203.0.113.7"))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("inválidos");
     }
@@ -109,7 +112,7 @@ class AuthServiceTest {
         request.setEmail("miguel@teste.com");
         request.setPassword("password123");
 
-        AuthResponse response = authService.login(request);
+        AuthResponse response = authService.login(request, "203.0.113.7");
 
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");

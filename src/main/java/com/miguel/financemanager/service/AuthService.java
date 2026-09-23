@@ -7,6 +7,7 @@ import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
+import com.miguel.financemanager.security.AuthRateLimiter;
 import com.miguel.financemanager.security.JwtService;
 import com.miguel.financemanager.security.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final AuthRateLimiter authRateLimiter;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -49,14 +51,19 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    // O bloqueio é verificado antes da password (e antes do BCrypt): enquanto
+    // dura, até a password certa recebe 429, exista ou não a conta.
+    public AuthResponse login(LoginRequest request, String clientIp) {
+        authRateLimiter.checkLogin(clientIp, request.getEmail());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (Exception e) {
+            authRateLimiter.loginFailed(clientIp, request.getEmail());
             throw new BadCredentialsException("Email ou password inválidos");
         }
+        authRateLimiter.loginSucceeded(clientIp, request.getEmail());
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Email ou password inválidos"));
