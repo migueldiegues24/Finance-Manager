@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -57,6 +59,24 @@ public class GlobalExceptionHandler {
         if (bodyError != null) {
             return ResponseEntity.status(bodyError.status()).body(Map.of("error", bodyError.getMessage()));
         }
+        return ResponseEntity.badRequest().body(Map.of("error", "Pedido inválido."));
+    }
+
+    @ExceptionHandler(PayloadTooLargeException.class)
+    public ResponseEntity<Map<String, String>> handlePayloadTooLarge(PayloadTooLargeException e) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(Map.of("error", e.getMessage()));
+    }
+
+    // Upload acima de spring.servlet.multipart.max-file-size/max-request-size.
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                .body(Map.of("error", "O ficheiro é demasiado grande (máximo 1 MB)."));
+    }
+
+    // Outros multipart inválidos (ex.: partes a mais): 400 em vez de 500.
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<Map<String, String>> handleMultipart(MultipartException e) {
         return ResponseEntity.badRequest().body(Map.of("error", "Pedido inválido."));
     }
 

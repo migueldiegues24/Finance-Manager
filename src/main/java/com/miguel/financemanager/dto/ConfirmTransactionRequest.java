@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,7 @@ public class ConfirmTransactionRequest {
     private LocalDate date;
 
     @NotBlank
+    @Size(max = 500)
     private String description;
 
     // Máximo 2 casas decimais, como a coluna: um valor arredondado ao gravar

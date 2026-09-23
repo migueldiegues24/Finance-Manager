@@ -45,6 +45,9 @@ public class SimpleCsvStatementParser implements StatementParser {
                 if (line.length < 3) {
                     continue;
                 }
+                if (transactions.size() == MAX_TRANSACTIONS) {
+                    throw StatementParser.tooManyTransactions();
+                }
 
                 LocalDate date = LocalDate.parse(line[0].trim(), DATE_FORMAT);
                 String description = line[1].trim();
