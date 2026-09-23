@@ -5,6 +5,7 @@ import com.miguel.financemanager.dto.UpdateTransactionCategoryRequest;
 import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.Transaction;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.ResourceNotFoundException;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,13 +42,17 @@ public class TransactionService {
     public TransactionResponse updateCategory(Long transactionId, UpdateTransactionCategoryRequest request) {
         User user = currentUserService.getCurrentUser();
 
+        // Id do path: 404 se não existir ou for de outro utilizador. Não é 403
+        // de propósito, para não confirmar que a transação de outra conta existe.
         Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transação não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
 
         if (!transaction.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Transação não encontrada");
+            throw new ResourceNotFoundException("Transação não encontrada");
         }
 
+        // categoryId vem do body: 400 (validação), não 404; o alvo do pedido
+        // (a transação) existe. Igual para categoria inexistente e alheia.
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
 

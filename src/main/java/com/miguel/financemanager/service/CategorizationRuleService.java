@@ -5,6 +5,7 @@ import com.miguel.financemanager.dto.RuleResponse;
 import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.CategorizationRule;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.ResourceNotFoundException;
 import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,19 +48,24 @@ public class CategorizationRuleService {
         return toResponse(ruleRepository.save(rule));
     }
 
+    // Id do path: 404 se não existir ou for de outro utilizador. Não é 403 de
+    // propósito, para não confirmar que a regra de outra conta existe.
     @Transactional
     public void deleteRule(Long ruleId) {
         User user = currentUserService.getCurrentUser();
         CategorizationRule rule = ruleRepository.findById(ruleId)
-                .orElseThrow(() -> new IllegalArgumentException("Regra não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Regra não encontrada"));
 
         if (!rule.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Regra não encontrada");
+            throw new ResourceNotFoundException("Regra não encontrada");
         }
 
         ruleRepository.delete(rule);
     }
 
+    // categoryId vem do body: o alvo do pedido existe, o que está errado é o
+    // pedido apontar para uma categoria que (para este utilizador) não existe.
+    // Por isso é 400 (validação), não 404; igual para inexistente e alheia.
     private Category getOwnedCategory(Long categoryId, User user) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
