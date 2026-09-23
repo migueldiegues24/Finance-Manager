@@ -5,7 +5,9 @@ import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.LoginRequest;
 import com.miguel.financemanager.dto.RefreshRequest;
 import com.miguel.financemanager.dto.RegisterRequest;
+import com.miguel.financemanager.security.ClientIpResolver;
 import com.miguel.financemanager.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final RegistrationConfig registrationConfig;
+    private final ClientIpResolver clientIpResolver;
 
     // Público: o frontend usa-o para esconder o formulário de registo.
     @GetMapping("/registration")
@@ -30,18 +33,18 @@ public class AuthController {
     // Com o registo desligado, o RegistrationConfig recusa o pedido antes de chegar aqui.
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        return ResponseEntity.ok(authService.register(request, clientIpResolver.resolve(http)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
+        return ResponseEntity.ok(authService.login(request, clientIpResolver.resolve(http)));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
-        return ResponseEntity.ok(authService.refresh(request.getRefreshToken()));
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request, HttpServletRequest http) {
+        return ResponseEntity.ok(authService.refresh(request.getRefreshToken(), clientIpResolver.resolve(http)));
     }
 
     @PostMapping("/logout")
