@@ -1,8 +1,10 @@
 package com.miguel.financemanager.exception;
 
+import com.miguel.financemanager.config.RequestBodyLimitFilter.RequestBodyException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -44,6 +46,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RegistrationDisabledException.class)
     public ResponseEntity<Map<String, String>> handleRegistrationDisabled(RegistrationDisabledException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+    }
+
+    // Corpo ilegível. Se a causa for o RequestBodyLimitFilter (corpo sem
+    // Content-Length que passou do limite, ou que demorou demasiado), responde
+    // 413/408 com a mensagem dele; senão, 400.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleNotReadable(HttpMessageNotReadableException e) {
+        RequestBodyException bodyError = RequestBodyException.findIn(e);
+        if (bodyError != null) {
+            return ResponseEntity.status(bodyError.status()).body(Map.of("error", bodyError.getMessage()));
+        }
+        return ResponseEntity.badRequest().body(Map.of("error", "Pedido inválido."));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
