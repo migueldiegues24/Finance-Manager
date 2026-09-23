@@ -2,6 +2,7 @@ package com.miguel.financemanager.exception;
 
 import com.miguel.financemanager.config.RequestBodyLimitFilter.RequestBodyException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -83,5 +84,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+    }
+
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ResponseEntity<Map<String, String>> handleTooManyAttempts(TooManyAttemptsException e) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
+                .body(Map.of("error", e.getMessage()));
     }
 }

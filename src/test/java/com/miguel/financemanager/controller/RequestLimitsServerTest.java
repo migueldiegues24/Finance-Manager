@@ -53,7 +53,7 @@ class RequestLimitsServerTest {
     void registerUser() throws Exception {
         // Sem rollback aqui (servidor real): um email diferente por teste.
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "srv-" + UUID.randomUUID() + "@teste.com", "password", "password123"));
+                Map.of("email", "srv-" + UUID.randomUUID() + "@teste.com", "password", "senha-de-teste-42"));
         HttpResponse<String> response = send(json("/api/auth/register", HttpRequest.BodyPublishers.ofString(body)));
         assertThat(response.statusCode()).isEqualTo(200);
         token = objectMapper.readTree(response.body()).get("accessToken").asText();

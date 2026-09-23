@@ -80,7 +80,7 @@ class ImportConcurrencyIntegrationTest {
     private String register(String email) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", "password123"))))
+                        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", "senha-de-teste-42"))))
                 .andExpect(status().isOk())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").asText();

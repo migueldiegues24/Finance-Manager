@@ -23,6 +23,27 @@
 
 ## Autenticação (frontend e backend)
 
+- **[Prioridade alta] O registo revela se um email já existe.** Um
+  `POST /api/auth/register` com um email registado responde 400 "Já existe
+  uma conta com este email", o que permite testar se alguém tem conta
+  (enumeração de contas). O login já não o revela, e o limite de 10 registos
+  por hora por IP (feat/auth-rate-limiting) só abranda o ataque, não o
+  impede. Resolver com a verificação de email: o registo responde sempre o
+  mesmo ("enviámos um email de confirmação") e, se a conta já existir, o
+  email enviado avisa o dono em vez de criar outra.
+  _Registado a 2026-09-23, na feat/auth-rate-limiting._
+
+- **Subir o custo do BCrypt para 12, com rehash no login.** Hoje é o padrão
+  do `BCryptPasswordEncoder` (10). Com 12 cada hash custa ~4x mais, o que
+  abranda um ataque offline se a BD fugir (o login fica ~4x mais lento, o
+  que o limite de tentativas torna aceitável). Como o custo vai dentro de
+  cada hash, as passwords atuais continuam a funcionar; para as migrar,
+  implementar `UserDetailsPasswordService` (o `DaoAuthenticationProvider`
+  chama-o num login certo quando `upgradeEncoding` diz que o hash é fraco)
+  e gravar o novo hash. Medir o tempo de um hash na máquina do Railway antes
+  de escolher o custo final.
+  _Registado a 2026-09-23, na feat/auth-rate-limiting._
+
 - ~~**Renovação concorrente da sessão perde a sessão.**~~ **Resolvido** na
   `fix/session-refresh` (2026-09-21), só no frontend (`api/session.ts`):
   renovação única por separador (promessa partilhada, limpa ao terminar),

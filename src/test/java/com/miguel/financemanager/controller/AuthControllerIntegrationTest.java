@@ -36,7 +36,7 @@ class AuthControllerIntegrationTest {
     @Test
     void registerLoginRefreshFlow_worksEndToEnd() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                Map.of("email", "integration@teste.com", "password", "password123"));
+                Map.of("email", "integration@teste.com", "password", "senha-de-teste-42"));
 
         MvcResult registerResult = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -57,7 +57,7 @@ class AuthControllerIntegrationTest {
 
         // Login normal com as mesmas credenciais.
         String loginBody = objectMapper.writeValueAsString(
-                Map.of("email", "integration@teste.com", "password", "password123"));
+                Map.of("email", "integration@teste.com", "password", "senha-de-teste-42"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,7 +85,7 @@ class AuthControllerIntegrationTest {
     @Test
     void register_rejectsDuplicateEmail() throws Exception {
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "dup@teste.com", "password", "password123"));
+                Map.of("email", "dup@teste.com", "password", "senha-de-teste-42"));
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ class AuthControllerIntegrationTest {
     @Test
     void login_returns401WithWrongPassword() throws Exception {
         String registerBody = objectMapper.writeValueAsString(
-                Map.of("email", "wrongpass@teste.com", "password", "password123"));
+                Map.of("email", "wrongpass@teste.com", "password", "senha-de-teste-42"));
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

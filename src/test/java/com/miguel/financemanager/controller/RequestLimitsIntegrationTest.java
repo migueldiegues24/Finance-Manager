@@ -47,7 +47,7 @@ class RequestLimitsIntegrationTest {
     @BeforeEach
     void registerUser() throws Exception {
         MvcResult result = postJson("/api/auth/register",
-                objectMapper.writeValueAsString(Map.of("email", "limites@teste.com", "password", "password123")), null)
+                objectMapper.writeValueAsString(Map.of("email", "limites@teste.com", "password", "senha-de-teste-42")), null)
                 .andExpect(status().isOk()).andReturn();
         token = objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").asText();
     }
@@ -96,8 +96,8 @@ class RequestLimitsIntegrationTest {
     void largestExistingPayloads_stayWellUnder32KB() throws Exception {
         // Parte local no máximo do @Email (64) e domínio com etiquetas de 60.
         String longEmail = "u".repeat(64) + "@" + "d".repeat(60) + "." + "e".repeat(60) + ".com";
-        // 72: o máximo que o BCrypt aceita (acima disso o registo já dá 400 hoje).
-        String register = objectMapper.writeValueAsString(Map.of("email", longEmail, "password", "p".repeat(72)));
+        // 64: o máximo do RegisterRequest (e dentro dos 72 bytes do BCrypt).
+        String register = objectMapper.writeValueAsString(Map.of("email", longEmail, "password", "senha-de-teste-42-".repeat(4).substring(0, 64)));
         String login = register;
         String category = objectMapper.writeValueAsString(Map.of("name", "c".repeat(100), "color", "#1F5E6B"));
         String rule = objectMapper.writeValueAsString(Map.of("keyword", "k".repeat(255), "categoryId", 1, "priority", 1));

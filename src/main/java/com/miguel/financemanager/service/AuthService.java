@@ -7,6 +7,7 @@ import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
+import com.miguel.financemanager.security.AuthRateLimiter;
 import com.miguel.financemanager.security.JwtService;
 import com.miguel.financemanager.security.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +32,17 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final AuthRateLimiter authRateLimiter;
 
+    // Conta cada pedido que passa a validação, com sucesso ou com email
+    // repetido: ambos criam contas ou dizem se um email existe. Uma password
+    // recusada não conta, para não castigar quem está a escolher uma.
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, String clientIp) {
+        authRateLimiter.checkRegister(clientIp);
+        PasswordPolicy.validate(request.getEmail(), request.getPassword());
+        authRateLimiter.registerAttempted(clientIp);
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Já existe uma conta com este email");
         }
@@ -49,14 +58,19 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    // O bloqueio é verificado antes da password (e antes do BCrypt): enquanto
+    // dura, até a password certa recebe 429, exista ou não a conta.
+    public AuthResponse login(LoginRequest request, String clientIp) {
+        authRateLimiter.checkLogin(clientIp, request.getEmail());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (Exception e) {
+            authRateLimiter.loginFailed(clientIp, request.getEmail());
             throw new BadCredentialsException("Email ou password inválidos");
         }
+        authRateLimiter.loginSucceeded(clientIp, request.getEmail());
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Email ou password inválidos"));
@@ -64,8 +78,15 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    public AuthResponse refresh(String rawRefreshToken) {
-        User user = refreshTokenService.consumeRefreshToken(rawRefreshToken);
+    public AuthResponse refresh(String rawRefreshToken, String clientIp) {
+        authRateLimiter.checkRefresh(clientIp);
+        User user;
+        try {
+            user = refreshTokenService.consumeRefreshToken(rawRefreshToken);
+        } catch (IllegalArgumentException e) {
+            authRateLimiter.refreshFailed(clientIp);
+            throw e;
+        }
         return issueTokens(user);
     }
 
