@@ -85,8 +85,9 @@ export default function AuthForm({ mode, registrationClosed = false }: AuthFormP
         value={password}
         onChange={setPassword}
         autoComplete={mode === "login" ? "current-password" : "new-password"}
-        minLength={mode === "register" ? 8 : undefined}
-        hint={mode === "register" ? "Mínimo 8 caracteres." : undefined}
+        minLength={mode === "register" ? 12 : undefined}
+        maxLength={mode === "register" ? 64 : undefined}
+        hint={mode === "register" ? "Mínimo 12 caracteres. Evita passwords óbvias." : undefined}
       />
 
       {error && <Notice tone="error" title={error} className="auth-form__error" />}

@@ -36,7 +36,7 @@ class DashboardControllerIntegrationTest {
     @BeforeEach
     void registerUser() throws Exception {
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "dashboardtest@teste.com", "password", "password123"));
+                Map.of("email", "dashboardtest@teste.com", "password", "senha-de-teste-42"));
 
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +92,7 @@ class DashboardControllerIntegrationTest {
     private String registerAndLogin(String email) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", "password123"))))
+                        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", "senha-de-teste-42"))))
                 .andExpect(status().isOk())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").asText();

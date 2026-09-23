@@ -35,10 +35,12 @@ public class AuthService {
     private final AuthRateLimiter authRateLimiter;
 
     // Conta cada pedido que passa a validação, com sucesso ou com email
-    // repetido: ambos criam contas ou dizem se um email existe.
+    // repetido: ambos criam contas ou dizem se um email existe. Uma password
+    // recusada não conta, para não castigar quem está a escolher uma.
     @Transactional
     public AuthResponse register(RegisterRequest request, String clientIp) {
         authRateLimiter.checkRegister(clientIp);
+        PasswordPolicy.validate(request.getEmail(), request.getPassword());
         authRateLimiter.registerAttempted(clientIp);
 
         if (userRepository.existsByEmail(request.getEmail())) {

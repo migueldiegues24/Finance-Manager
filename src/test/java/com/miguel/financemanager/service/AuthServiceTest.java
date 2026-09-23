@@ -56,7 +56,7 @@ class AuthServiceTest {
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
 
         assertThatThrownBy(() -> authService.register(request, "203.0.113.7"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -68,17 +68,17 @@ class AuthServiceTest {
     @Test
     void register_encodesPasswordSeedsSevenCategoriesAndIssuesTokens() {
         when(userRepository.existsByEmail("miguel@teste.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("hashed");
+        when(passwordEncoder.encode("senha-de-teste-42")).thenReturn("hashed");
         when(jwtService.generateAccessToken(anyString())).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken(any(User.class))).thenReturn("refresh-token");
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
 
         AuthResponse response = authService.register(request, "203.0.113.7");
 
-        verify(passwordEncoder).encode("password123");
+        verify(passwordEncoder).encode("senha-de-teste-42");
         verify(userRepository).save(any(User.class));
         // 6 categorias sugeridas + "Sem Categoria"
         verify(categoryRepository, times(7)).save(any(Category.class));
@@ -110,7 +110,7 @@ class AuthServiceTest {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
 
         AuthResponse response = authService.login(request, "203.0.113.7");
 
