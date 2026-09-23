@@ -21,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.time.Duration;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +53,9 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    @Value("${request-body.read-timeout:30s}")
+    private Duration requestBodyReadTimeout;
+
     @Value("${allowed.origins:http://localhost:5173}")
     private String allowedOrigins;
 
@@ -78,6 +84,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                // Logo a seguir ao CORS: as respostas 413/408 levam os cabeçalhos
+                // CORS e o limite aplica-se antes da autenticação. Não é um @Bean
+                // de propósito, para o Spring Boot não o registar outra vez fora
+                // desta cadeia.
+                .addFilterAfter(new RequestBodyLimitFilter(requestBodyReadTimeout), CorsFilter.class)
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

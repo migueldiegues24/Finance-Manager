@@ -248,7 +248,7 @@ class CategoryControllerIntegrationTest {
                         .header("Authorization", "Bearer " + otherToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("name", "Minha", "color", "#000000"))))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Categoria não encontrada"));
 
         mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))

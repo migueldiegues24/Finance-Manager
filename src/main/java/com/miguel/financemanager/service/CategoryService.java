@@ -4,6 +4,7 @@ import com.miguel.financemanager.dto.CategoryRequest;
 import com.miguel.financemanager.dto.CategoryResponse;
 import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.ResourceNotFoundException;
 import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.TransactionRepository;
@@ -92,12 +93,14 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
+    // Id do path: 404 se não existir ou for de outro utilizador. Não é 403 de
+    // propósito, para não confirmar que a categoria de outra conta existe.
     private Category getOwnedCategory(Long categoryId, User user) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
 
         if (!category.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Categoria não encontrada");
+            throw new ResourceNotFoundException("Categoria não encontrada");
         }
 
         return category;

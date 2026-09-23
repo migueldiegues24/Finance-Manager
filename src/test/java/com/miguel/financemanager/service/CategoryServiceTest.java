@@ -4,6 +4,7 @@ import com.miguel.financemanager.dto.CategoryRequest;
 import com.miguel.financemanager.dto.CategoryResponse;
 import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.ResourceNotFoundException;
 import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.TransactionRepository;
@@ -168,7 +169,7 @@ class CategoryServiceTest {
         request.setName("Novo nome");
 
         assertThatThrownBy(() -> categoryService.updateCategory(7L, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("não encontrada");
     }
 
