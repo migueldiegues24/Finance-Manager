@@ -22,4 +22,4 @@ Lida no build do Vite (`frontend/src/api/client.ts`).
 
 | Variável | O que faz | Por omissão |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | URL base da API do backend. | `http://localhost:8080/api` |
+| `VITE_API_BASE_URL` | URL base da API do backend. Se o domínio mudar, atualizar também o `connect-src` da CSP em `frontend/vercel.json`, senão o browser bloqueia os pedidos. | `http://localhost:8080/api` |

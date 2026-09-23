@@ -21,6 +21,34 @@
   o utilizador pode trocar a categoria antes de confirmar.
   _Registado a 2026-09-21, na feat/category-colors._
 
+## Dependências
+
+- **Majors e 0.x adiadas (sem vulnerabilidade conhecida).** Verificado a
+  2026-09-24 com `npm audit` (0 vulnerabilidades) e
+  `mvn org.codehaus.mojo:versions-maven-plugin:2.21.0:display-dependency-updates`:
+  - `io.jsonwebtoken:jjwt-*` 0.12.6 → 0.13.0: numa série 0.x a minor pode
+    partir API; rever o changelog e os testes do `JwtService` antes.
+  - `typescript` 6 → 7 e `@types/node` 24 → 26: majors; correr `tsc -b`,
+    ESLint (`typescript-eslint` tem de suportar a versão) e o build.
+  - Spring Boot 4.1.1 é a última estável (só há 4.2.0-M1); h2, lombok e
+    flyway-database-postgresql vêm do BOM e sobem com o Boot.
+  _Registado a 2026-09-24, na feat/security-headers-deps._
+
+- **`./mvnw` não funciona.** Falta `.mvn/wrapper/maven-wrapper.properties`
+  no repositório; hoje usa-se o `mvn` do sistema (o Dockerfile usa a
+  imagem do Maven, por isso o deploy não depende disto). Regenerar com
+  `mvn wrapper:wrapper` e commitar a pasta `.mvn/`.
+  _Registado a 2026-09-24, na feat/security-headers-deps._
+
+## Frontend
+
+- **CSP bloqueia a barra de ferramentas do Vercel nos previews.** A CSP do
+  `vercel.json` só autoriza scripts do próprio domínio, por isso a Vercel
+  Toolbar (comentários nos preview deployments, carregada de
+  `vercel.live`) não abre. Se fizer falta, acrescentar `https://vercel.live`
+  a `script-src`, `connect-src`, `frame-src` e `img-src`, idealmente só nos
+  previews. _Registado a 2026-09-24, na feat/security-headers-deps._
+
 ## Autenticação (frontend e backend)
 
 - ~~**Renovação concorrente da sessão perde a sessão.**~~ **Resolvido** na
