@@ -9,7 +9,9 @@ interface AuthContextValue {
   loading: boolean;
   // Email lido do access token, só para mostrar (ver utils/jwt.ts).
   email: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  // rememberMe: "Manter sessão iniciada" (localStorage, 14 dias); senão a
+  // sessão fica no sessionStorage e o servidor dá-lhe 12 h por renovação.
+  login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -20,11 +22,11 @@ type Status = "loading" | "offline" | "ready";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-async function requestTokens(path: "login" | "register", email: string, password: string): Promise<TokenPair> {
+async function requestTokens(path: "login" | "register", body: Record<string, unknown>): Promise<TokenPair> {
   const response = await fetch(`${API_BASE}/auth/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -119,23 +121,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function login(email: string, password: string) {
-    const data = await requestTokens("login", email, password);
-    session.setTokens(data, true);
+  async function login(email: string, password: string, rememberMe: boolean) {
+    const data = await requestTokens("login", { email, password, rememberMe });
+    session.setTokens(data, rememberMe);
     setEmail(decodeJwtSubject(data.accessToken));
     setIsAuthenticated(true);
   }
 
   async function register(email: string, password: string) {
-    const data = await requestTokens("register", email, password);
-    session.setTokens(data, true);
+    // O registo não tem a opção: sessão curta, como o servidor emitiu.
+    const data = await requestTokens("register", { email, password });
+    session.setTokens(data, false);
     setEmail(decodeJwtSubject(data.accessToken));
     setIsAuthenticated(true);
   }
 
   // Tenta revogar o refresh token no servidor (até ~3 s) e limpa sempre a
   // sessão local, mesmo que o pedido falhe ou não haja rede. Os outros
-  // separadores recebem o evento storage e saem também.
+  // separadores recebem o aviso (canal ou evento storage) e saem também.
   async function logout() {
     const token = session.getRefreshToken();
     try {
