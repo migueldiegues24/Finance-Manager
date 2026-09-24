@@ -4,6 +4,7 @@ import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.LoginRequest;
 import com.miguel.financemanager.dto.RegisterRequest;
 import com.miguel.financemanager.entity.Category;
+import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
@@ -55,7 +56,8 @@ public class AuthService {
 
         seedDefaultCategories(user);
 
-        return issueTokens(user);
+        // O registo não tem a opção "Manter sessão iniciada": sessão curta.
+        return issueTokens(user, false);
     }
 
     // O bloqueio é verificado antes da password (e antes do BCrypt): enquanto
@@ -75,28 +77,29 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Email ou password inválidos"));
 
-        return issueTokens(user);
+        return issueTokens(user, request.isRememberMe());
     }
 
     public AuthResponse refresh(String rawRefreshToken, String clientIp) {
         authRateLimiter.checkRefresh(clientIp);
-        User user;
+        RefreshToken consumed;
         try {
-            user = refreshTokenService.consumeRefreshToken(rawRefreshToken);
+            consumed = refreshTokenService.consumeRefreshToken(rawRefreshToken);
         } catch (IllegalArgumentException e) {
             authRateLimiter.refreshFailed(clientIp);
             throw e;
         }
-        return issueTokens(user);
+        // O sucessor herda o modo do token consumido: nunca alterna sozinho.
+        return issueTokens(consumed.getUser(), consumed.isRememberMe());
     }
 
     public void logout(String rawRefreshToken) {
         refreshTokenService.revokeToken(rawRefreshToken);
     }
 
-    private AuthResponse issueTokens(User user) {
+    private AuthResponse issueTokens(User user, boolean rememberMe) {
         String accessToken = jwtService.generateAccessToken(user.getEmail());
-        String refreshToken = refreshTokenService.createRefreshToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user, rememberMe);
         return new AuthResponse(accessToken, refreshToken);
     }
 

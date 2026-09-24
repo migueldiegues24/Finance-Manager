@@ -35,6 +35,12 @@ public class RefreshToken {
     @Builder.Default
     private boolean revoked = false;
 
+    // true = "Manter sessão iniciada" (duração longa); false = sessão curta.
+    // A renovação herda sempre o modo do token consumido.
+    @Column(name = "remember_me", nullable = false)
+    @Builder.Default
+    private boolean rememberMe = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

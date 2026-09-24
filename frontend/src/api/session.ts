@@ -1,8 +1,19 @@
 import { AppError } from "./errors.ts";
 import { decodeJwtExpiry, decodeJwtSubject } from "../utils/jwt.ts";
 
-// Sessão do utilizador: par de tokens em memória e no localStorage, e a
-// renovação do access token. O refresh token roda a cada uso e só pode ser
+// Sessão do utilizador: par de tokens em memória e no armazenamento, e a
+// renovação do access token. Dois modos, escolhidos no login: "Manter sessão
+// iniciada" guarda no localStorage (sobrevive a fechar o browser); sem essa
+// opção (e no registo) guarda no sessionStorage, que acaba com o separador.
+// A renovação escreve sempre no armazenamento de onde a sessão veio.
+//
+// Entre separadores: o sessionStorage não é partilhado e o evento storage não
+// o cobre, por isso logins, renovações e logouts são anunciados num
+// BroadcastChannel, e cada separador copia o par para o seu armazenamento.
+// Sem BroadcastChannel (browsers antigos) vale só o evento storage: funciona
+// no modo "Manter sessão iniciada"; no modo curto cada separador fica isolado.
+//
+// O refresh token roda a cada uso e só pode ser O refresh token roda a cada uso e só pode ser
 // usado uma vez, por isso nunca podem partir duas renovações com o mesmo
 // token: dentro do separador há uma só promessa partilhada (single-flight) e
 // entre separadores um bloqueio (navigator.locks), dentro do qual se relê o
@@ -12,8 +23,9 @@ import { decodeJwtExpiry, decodeJwtSubject } from "../utils/jwt.ts";
 // testes poderem simular separadores, bloqueios e respostas do servidor.
 
 export const TOKENS_KEY = "fm.auth.tokens";
-// Chave usada antes desta versão (só o refresh token); migrada ao ler.
+// Chave usada antes desta versão (só o refresh token, no localStorage); migrada ao ler.
 export const LEGACY_REFRESH_KEY = "refreshToken";
+export const SESSION_CHANNEL_NAME = "finance-manager:auth-session";
 export const REFRESH_LOCK_NAME = "finance-manager:auth-refresh";
 // Um access token que expira dentro desta margem já é tratado como expirado.
 export const ACCESS_TOKEN_MARGIN_MS = 30_000;
@@ -35,6 +47,18 @@ export interface KeyValueStorage {
   removeItem(key: string): void;
 }
 
+// Subconjunto de BroadcastChannel usado aqui.
+export interface BroadcastChannelLike {
+  postMessage(message: unknown): void;
+  addEventListener(type: "message", listener: (event: { data: unknown }) => void): void;
+}
+
+// O que passa no canal entre separadores. remember diz em que armazenamento
+// quem recebe deve guardar o par.
+export type SessionMessage =
+  | { type: "tokens"; tokens: StoredTokens; remember: boolean }
+  | { type: "ended" };
+
 export interface LockManagerLike {
   request<T>(name: string, callback: () => Promise<T>): Promise<T>;
 }
@@ -47,7 +71,11 @@ export interface RefreshResponse {
 }
 
 export interface SessionDeps {
+  // localStorage: sessões com "Manter sessão iniciada".
   storage: KeyValueStorage | null;
+  // sessionStorage: sessões curtas (sem a opção, ou após registo).
+  tabStorage?: KeyValueStorage | null;
+  channel?: BroadcastChannelLike | null;
   refreshRequest: (refreshToken: string) => Promise<RefreshResponse>;
   locks?: LockManagerLike | null;
   now?: () => number;
@@ -89,6 +117,28 @@ export function parseStoredTokens(raw: string | null): StoredTokens | null {
   }
 }
 
+// Abre o canal entre separadores, se o browser o suportar. Sem suporte (ou se
+// o construtor falhar) devolve null e a sessão continua a funcionar sem ele.
+export function openSessionChannel(
+  Channel: (new (name: string) => BroadcastChannelLike) | undefined,
+): BroadcastChannelLike | null {
+  if (typeof Channel !== "function") return null;
+  try {
+    return new Channel(SESSION_CHANNEL_NAME);
+  } catch {
+    return null;
+  }
+}
+
+function parseMessage(data: unknown): SessionMessage | null {
+  if (!data || typeof data !== "object") return null;
+  const { type, tokens, remember } = data as Record<string, unknown>;
+  if (type === "ended") return { type };
+  if (type !== "tokens" || typeof remember !== "boolean") return null;
+  const parsed = parseStoredTokens(JSON.stringify(tokens ?? null));
+  return parsed ? { type, tokens: parsed, remember } : null;
+}
+
 function isTokenPair(value: unknown): value is TokenPair {
   if (!value || typeof value !== "object") return false;
   const { accessToken, refreshToken } = value as Record<string, unknown>;
@@ -96,8 +146,10 @@ function isTokenPair(value: unknown): value is TokenPair {
 }
 
 export function createSessionManager(deps: SessionDeps) {
-  const { storage, refreshRequest, locks = null, now = Date.now } = deps;
+  const { storage, tabStorage = null, channel = null, refreshRequest, locks = null, now = Date.now } = deps;
   let current: StoredTokens | null = null;
+  // Modo da sessão atual: decide onde se escreve o par renovado.
+  let remembered = false;
   let inflight: Promise<StoredTokens> | null = null;
   // Muda a cada login, logout ou fim de sessão: uma renovação que termine
   // depois disso já não pode repor tokens (ressuscitar a sessão).
@@ -108,31 +160,59 @@ export function createSessionManager(deps: SessionDeps) {
     for (const listener of listeners) listener(event);
   }
 
+  // Onde está a sessão guardada: primeiro o sessionStorage (sessão curta),
+  // depois o localStorage (com migração da chave antiga).
   // undefined = armazenamento inacessível (modo privado, bloqueado): vale a memória.
-  function readStorage(): StoredTokens | null | undefined {
-    if (!storage) return undefined;
+  function readStorage(): { tokens: StoredTokens; remember: boolean } | null | undefined {
+    if (!storage && !tabStorage) return undefined;
     try {
+      const short = parseStoredTokens(tabStorage?.getItem(TOKENS_KEY) ?? null);
+      if (short) return { tokens: short, remember: false };
+      if (!storage) return null;
       const raw = storage.getItem(TOKENS_KEY);
-      if (raw !== null) return parseStoredTokens(raw);
+      if (raw !== null) {
+        const tokens = parseStoredTokens(raw);
+        return tokens && { tokens, remember: true };
+      }
       const legacy = storage.getItem(LEGACY_REFRESH_KEY);
       if (!legacy) return null;
       const migrated: StoredTokens = { accessToken: null, refreshToken: legacy };
       storage.setItem(TOKENS_KEY, JSON.stringify(migrated));
       storage.removeItem(LEGACY_REFRESH_KEY);
-      return migrated;
+      return { tokens: migrated, remember: true };
     } catch {
       return undefined;
     }
   }
 
-  function writeStorage(tokens: StoredTokens | null) {
-    if (!storage) return;
+  function writeArea(area: KeyValueStorage | null, value: string | null) {
+    if (!area) return;
     try {
-      if (tokens) storage.setItem(TOKENS_KEY, JSON.stringify(tokens));
-      else storage.removeItem(TOKENS_KEY);
-      storage.removeItem(LEGACY_REFRESH_KEY);
+      if (value !== null) area.setItem(TOKENS_KEY, value);
+      else area.removeItem(TOKENS_KEY);
     } catch {
       // Sem armazenamento a sessão continua em memória neste separador.
+    }
+  }
+
+  // Grava o par no armazenamento do modo e apaga-o do outro, para uma mudança
+  // de modo entre logins não deixar um par antigo para trás. null apaga ambos.
+  function writeStorage(tokens: StoredTokens | null, remember = remembered) {
+    const value = tokens && JSON.stringify(tokens);
+    writeArea(remember ? storage : tabStorage, value);
+    writeArea(remember ? tabStorage : storage, null);
+    try {
+      storage?.removeItem(LEGACY_REFRESH_KEY);
+    } catch {
+      // Idem.
+    }
+  }
+
+  function broadcast(message: SessionMessage) {
+    try {
+      channel?.postMessage(message);
+    } catch {
+      // Sem canal os outros separadores contam só com o evento storage.
     }
   }
 
@@ -152,12 +232,13 @@ export function createSessionManager(deps: SessionDeps) {
     generation++;
     current = null;
     writeStorage(null);
+    broadcast({ type: "ended" });
     emit("ended");
   }
 
   // Aceita um par que outro separador escreveu. Se for de outra conta, descarta
   // o estado local em vez de misturar dados de uma conta com tokens de outra.
-  function adopt(next: StoredTokens): StoredTokens {
+  function adopt(next: StoredTokens, remember: boolean): StoredTokens {
     if (isOtherUser(next)) {
       current = null;
       emit("user-changed");
@@ -165,6 +246,7 @@ export function createSessionManager(deps: SessionDeps) {
     }
     const changed = current?.accessToken !== next.accessToken || current?.refreshToken !== next.refreshToken;
     current = next;
+    remembered = remember;
     if (changed) emit("updated");
     return next;
   }
@@ -172,18 +254,20 @@ export function createSessionManager(deps: SessionDeps) {
   // Corre com o bloqueio entre separadores (se existir).
   async function renew(rejectedAccessToken: string | null): Promise<StoredTokens> {
     const stored = readStorage();
-    const latest = stored === undefined ? current : stored;
-    if (!latest) {
+    const found = stored === undefined ? current && { tokens: current, remember: remembered } : stored;
+    if (!found) {
       // Outro separador terminou a sessão entretanto.
       if (current) end();
       throw new SessionEndedError();
     }
 
+    const latest = found.tokens;
+
     // Outro separador já renovou (ou o token guardado ainda serve): sem pedido.
     if (latest.accessToken !== rejectedAccessToken && isFresh(latest.accessToken)) {
-      return adopt(latest);
+      return adopt(latest, found.remember);
     }
-    if (isOtherUser(latest)) return adopt(latest);
+    if (isOtherUser(latest)) return adopt(latest, found.remember);
 
     const startedAt = generation;
     let response: RefreshResponse;
@@ -198,7 +282,7 @@ export function createSessionManager(deps: SessionDeps) {
     if (response.status === 400 || response.status === 401) {
       // Se outro separador já rodou o token, o 400 é esperado: adota o par mais novo.
       const newer = readStorage();
-      if (newer && newer.refreshToken !== latest.refreshToken) return adopt(newer);
+      if (newer && newer.tokens.refreshToken !== latest.refreshToken) return adopt(newer.tokens, newer.remember);
       end();
       throw new SessionEndedError();
     }
@@ -214,8 +298,11 @@ export function createSessionManager(deps: SessionDeps) {
     if (startedAt !== generation) throw new SessionEndedError();
 
     const tokens = { accessToken: body.accessToken, refreshToken: body.refreshToken };
+    // O servidor mantém o modo do token consumido; o armazenamento acompanha.
+    remembered = found.remember;
     writeStorage(tokens);
     current = tokens;
+    broadcast({ type: "tokens", tokens, remember: remembered });
     emit("updated");
     return tokens;
   }
@@ -234,6 +321,31 @@ export function createSessionManager(deps: SessionDeps) {
     return inflight;
   }
 
+  // Aviso de outro separador no canal. O par é copiado para o armazenamento
+  // deste separador (o sessionStorage não é partilhado), para um reload ou a
+  // próxima renovação o encontrarem.
+  function handleMessage(data: unknown) {
+    const message = parseMessage(data);
+    if (!message) return;
+    if (message.type === "ended") {
+      generation++;
+      writeStorage(null);
+      if (current) {
+        current = null;
+        emit("ended");
+      }
+      return;
+    }
+    writeStorage(message.tokens, message.remember);
+    try {
+      adopt(message.tokens, message.remember);
+    } catch {
+      // adopt já avisou (user-changed); o reload lê o par já guardado.
+    }
+  }
+
+  channel?.addEventListener("message", (event) => handleMessage(event.data));
+
   return {
     getAccessToken: () => current?.accessToken ?? null,
     getRefreshToken: () => current?.refreshToken ?? null,
@@ -245,7 +357,10 @@ export function createSessionManager(deps: SessionDeps) {
     // em falha transitória (os tokens mantêm-se).
     async restore(): Promise<boolean> {
       const stored = readStorage();
-      if (stored !== undefined) current = stored;
+      if (stored !== undefined) {
+        current = stored?.tokens ?? null;
+        if (stored) remembered = stored.remember;
+      }
       if (!current) return false;
       if (isFresh(current.accessToken)) return true;
       try {
@@ -257,22 +372,29 @@ export function createSessionManager(deps: SessionDeps) {
       }
     },
 
-    // Login ou registo neste separador.
-    setTokens(tokens: TokenPair) {
+    // Login ou registo neste separador. remember: "Manter sessão iniciada".
+    setTokens(tokens: TokenPair, remember: boolean) {
       generation++;
       current = { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+      remembered = remember;
       writeStorage(current);
+      broadcast({ type: "tokens", tokens: current, remember });
     },
 
-    // Logout neste separador; os outros recebem o evento storage e saem também.
+    // Logout neste separador; os outros recebem o aviso no canal (ou o
+    // evento storage, sem canal) e saem também.
     clear() {
       generation++;
       current = null;
       writeStorage(null);
+      broadcast({ type: "ended" });
     },
 
-    // Evento storage de outro separador (key null = storage.clear()).
+    // Evento storage de outro separador (key null = storage.clear()). Com
+    // canal é ignorado: o canal já traz tudo, e seguir os dois ao mesmo tempo
+    // podia ler como logout a limpeza do localStorage feita por um login curto.
     handleStorageChange(key: string | null, newValue: string | null) {
+      if (channel) return;
       if (key !== null && key !== TOKENS_KEY) return;
       const next = parseStoredTokens(key === null ? null : newValue);
       if (!next) {
@@ -284,7 +406,7 @@ export function createSessionManager(deps: SessionDeps) {
         return;
       }
       try {
-        adopt(next);
+        adopt(next, true);
       } catch {
         // adopt já avisou (user-changed).
       }

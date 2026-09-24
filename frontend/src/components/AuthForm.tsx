@@ -38,8 +38,11 @@ export default function AuthForm({ mode, registrationClosed = false }: AuthFormP
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const emailId = useId();
+  const rememberHintId = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // "Manter sessão iniciada": desmarcada por omissão (sessão curta).
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const copy = COPY[mode];
@@ -50,7 +53,7 @@ export default function AuthForm({ mode, registrationClosed = false }: AuthFormP
     setError(null);
     setSubmitting(true);
     try {
-      await (mode === "login" ? login(email, password) : register(email, password));
+      await (mode === "login" ? login(email, password, rememberMe) : register(email, password));
       navigate("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Algo correu mal. Tenta de novo.");
@@ -89,6 +92,25 @@ export default function AuthForm({ mode, registrationClosed = false }: AuthFormP
         maxLength={mode === "register" ? 64 : undefined}
         hint={mode === "register" ? "Mínimo 12 caracteres. Evita passwords óbvias." : undefined}
       />
+
+      {mode === "login" && (
+        <div className="auth-field auth-remember">
+          <label className="auth-remember__label">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => setRememberMe(event.target.checked)}
+              aria-describedby={rememberHintId}
+            />
+            Manter sessão iniciada
+          </label>
+          <p className="status__detail auth-field__hint" id={rememberHintId}>
+            {rememberMe
+              ? "Continuas com sessão iniciada durante 14 dias, mesmo depois de fechar o browser. Não uses num dispositivo partilhado."
+              : "A sessão termina quando fechares o browser."}
+          </p>
+        </div>
+      )}
 
       {error && <Notice tone="error" title={error} className="auth-form__error" />}
 

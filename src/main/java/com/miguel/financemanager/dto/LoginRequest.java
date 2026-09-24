@@ -15,4 +15,7 @@ public class LoginRequest {
 
     @NotBlank
     private String password;
+
+    // "Manter sessão iniciada". Opcional: se faltar, conta como false (sessão curta).
+    private boolean rememberMe;
 }
