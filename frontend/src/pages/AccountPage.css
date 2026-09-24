@@ -59,27 +59,42 @@
   margin-bottom: var(--space-1);
 }
 
-@media (max-width: 40rem) {
-  /* Em ecrãs estreitos a tabela de sessões passa a blocos empilhados. */
-  .account-page__sessions thead {
-    display: none;
+/* Modo empilhado do ledger (.ledger--stack, ecrãs estreitos): o tipo de
+   sessão e o botão numa linha, as datas por baixo, com o nome do campo. */
+@media (max-width: 640px) {
+  .account-page__sessions tbody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name actions"
+      "last last"
+      "expires expires";
   }
 
-  .account-page__sessions tr,
-  .account-page__sessions td {
-    display: block;
+  .account-page__cell--name {
+    grid-area: name;
   }
 
-  .account-page__sessions td {
-    padding-block: var(--space-1);
+  .account-page__cell--last {
+    grid-area: last;
   }
 
-  .account-page__sessions td[data-label]::before {
+  .account-page__cell--expires {
+    grid-area: expires;
+  }
+
+  .account-page__sessions td.account-page__actions {
+    grid-area: actions;
+    text-align: right;
+  }
+
+  .account-page__cell--last,
+  .account-page__cell--expires {
+    font-size: 0.82rem;
+  }
+
+  .account-page__cell--last::before,
+  .account-page__cell--expires::before {
     content: attr(data-label) ": ";
     color: var(--color-ink-soft);
-  }
-
-  .account-page__actions {
-    text-align: left;
   }
 }

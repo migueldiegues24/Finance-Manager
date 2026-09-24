@@ -201,29 +201,35 @@ export default function AccountPage() {
 
         {sessions && (
           <>
-            <table className="ledger account-page__sessions">
-              <thead>
-                <tr>
-                  <th>Sessão</th>
-                  <th>Última atividade</th>
-                  <th>Expira</th>
-                  <th>
+            <table className="ledger ledger--stack account-page__sessions" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader" scope="col">
+                    Sessão
+                  </th>
+                  <th role="columnheader" scope="col">
+                    Última atividade
+                  </th>
+                  <th role="columnheader" scope="col">
+                    Expira
+                  </th>
+                  <th role="columnheader" scope="col">
                     <span className="visually-hidden">Ações</span>
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {sessions.map((session) => (
-                  <tr key={session.id}>
-                    <td>
+                  <tr role="row" key={session.id}>
+                    <td role="cell" className="account-page__cell--name">
                       <span className="account-page__session-name">
                         {sessionModeLabel(session.mode)}
                         {session.current && <span className="tag">Esta sessão</span>}
                       </span>
                     </td>
-                    <td data-label="Última atividade">{formatDateTime(session.createdAt)}</td>
-                    <td data-label="Expira">{formatDateTime(session.expiresAt)}</td>
-                    <td className="account-page__actions">
+                    <td role="cell" className="account-page__cell--last" data-label="Última atividade">{formatDateTime(session.createdAt)}</td>
+                    <td role="cell" className="account-page__cell--expires" data-label="Expira">{formatDateTime(session.expiresAt)}</td>
+                    <td role="cell" className="account-page__actions">
                       <button
                         type="button"
                         className="btn btn--link btn--danger"
