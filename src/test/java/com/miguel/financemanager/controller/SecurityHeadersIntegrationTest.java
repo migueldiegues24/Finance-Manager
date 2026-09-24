@@ -64,13 +64,17 @@ class SecurityHeadersIntegrationTest {
     }
 
     // Em produção o TLS termina no proxy do Railway, que passa X-Forwarded-Proto.
+    // Hoje esse cabeçalho é ignorado de propósito (forward-headers-strategy=none,
+    // ver application.properties), por isso não há HSTS atrás do proxy. Quando
+    // o item do backlog "HSTS atrás do proxy" for feito, este teste volta a
+    // exigir o HSTS, e o ForwardedForRateLimitIntegrationTest tem de continuar verde.
     @Test
-    void httpsBehindProxy_sendsHsts() throws Exception {
+    void httpsBehindProxy_noHstsUntilProxyFilter() throws Exception {
         mockMvc.perform(get("/api/categories")
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Forwarded-Proto", "https"))
                 .andExpect(status().isOk())
-                .andExpect(header().string(HSTS, "max-age=31536000"));
+                .andExpect(header().doesNotExist(HSTS));
     }
 
     @Test
