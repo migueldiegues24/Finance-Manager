@@ -1,5 +1,33 @@
 # Backlog
 
+## Segurança
+
+- **Prioridade alta: reintroduzir o HSTS atrás do proxy do Railway sem o
+  `ForwardedHeaderFilter` completo.** O `server.forward-headers-strategy=framework`
+  punha no `remoteAddr` o **primeiro** valor do `X-Forwarded-For`, que o
+  cliente controla, e escondia o cabeçalho do `ClientIpResolver`. Bastava
+  variar esse valor para contornar todos os limites de tentativas por IP
+  (login por IP e por IP+email, registo, refresh), com
+  `TRUST_X_FORWARDED_FOR` a `true` ou a `false`. O hotfix pôs a estratégia a
+  `none`. O custo é que o Spring vê os pedidos como HTTP atrás do proxy e o
+  HSTS deixa de sair em produção. Caminhos possíveis:
+  - **Filtro próprio e mínimo** que só lê `X-Forwarded-Proto` para marcar o
+    pedido como HTTPS (`isSecure()`/`getScheme()`), sem tocar no
+    `remoteAddr`, no `X-Forwarded-For` nem noutros cabeçalhos.
+  - **Confirmar com o suporte do Railway** qual cabeçalho é fiável para o IP
+    do cliente (`X-Real-IP` ou a posição certa no `X-Forwarded-For`) antes de
+    reativar qualquer forwarding. As respostas públicas contradizem-se:
+    [em 2024](https://station.railway.com/questions/edge-proxy-x-forwarded-for-and-x-real-ip-c5a50049)
+    o último valor era o fiável;
+    [em 2026](https://station.railway.com/questions/security-critical-questions-on-edge-prox-8fddd775)
+    há respostas de pessoal do Railway que dizem o contrário.
+
+  Critério de fecho: `SecurityHeadersIntegrationTest` volta a exigir o HSTS
+  com `X-Forwarded-Proto: https`, o `ForwardedForRateLimitIntegrationTest`
+  continua verde, e em produção a API volta a enviar
+  `strict-transport-security`.
+  _Registado a 2026-09-24, na hotfix/forwarded-for-spoofing._
+
 ## Backend
 
 - **`PUT /api/rules/{id}` para editar regras.** Hoje `/api/rules` só tem
