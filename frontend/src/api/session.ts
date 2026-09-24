@@ -344,6 +344,14 @@ export function createSessionManager(deps: SessionDeps) {
     }
   }
 
+  function setTokens(tokens: TokenPair, remember: boolean) {
+    generation++;
+    current = { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+    remembered = remember;
+    writeStorage(current);
+    broadcast({ type: "tokens", tokens: current, remember });
+  }
+
   channel?.addEventListener("message", (event) => handleMessage(event.data));
 
   return {
@@ -374,11 +382,14 @@ export function createSessionManager(deps: SessionDeps) {
 
     // Login ou registo neste separador. remember: "Manter sessão iniciada".
     setTokens(tokens: TokenPair, remember: boolean) {
-      generation++;
-      current = { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
-      remembered = remember;
-      writeStorage(current);
-      broadcast({ type: "tokens", tokens: current, remember });
+      setTokens(tokens, remember);
+    },
+
+    // Par novo para a sessão atual, emitido fora da renovação (ex.: depois de
+    // mudar a password, que revoga todos os refresh tokens). Fica no mesmo
+    // modo; os outros separadores recebem-no pelo canal.
+    replaceTokens(tokens: TokenPair) {
+      setTokens(tokens, remembered);
     },
 
     // Logout neste separador; os outros recebem o aviso no canal (ou o

@@ -14,6 +14,11 @@ interface AuthContextValue {
   login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  // Par novo para esta sessão, no mesmo modo (ex.: depois de mudar a password).
+  replaceTokens: (tokens: TokenPair) => void;
+  // Termina a sessão só localmente, sem pedido: o servidor já a revogou
+  // (sessão atual terminada, ou conta apagada).
+  endSession: () => void;
 }
 
 // loading: a restaurar a sessão guardada; offline: falha transitória no
@@ -150,13 +155,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function replaceTokens(tokens: TokenPair) {
+    session.replaceTokens(tokens);
+    setEmail(decodeJwtSubject(tokens.accessToken));
+    setIsAuthenticated(true);
+  }
+
+  function endSession() {
+    session.clear();
+    setEmail(null);
+    setIsAuthenticated(false);
+  }
+
   if (status === "offline") {
     return <SessionOffline retrying={retrying} onRetry={retry} />;
   }
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, loading: status === "loading", email, login, register, logout }}
+      value={{
+        isAuthenticated,
+        loading: status === "loading",
+        email,
+        login,
+        register,
+        logout,
+        replaceTokens,
+        endSession,
+      }}
     >
       {children}
     </AuthContext.Provider>

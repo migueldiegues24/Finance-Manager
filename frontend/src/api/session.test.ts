@@ -511,6 +511,46 @@ test("sessão recordada: a renovação continua no localStorage", async () => {
   assert.equal(tabStorage.data.has(TOKENS_KEY), false);
 });
 
+test("replaceTokens mantém a sessão curta no sessionStorage", () => {
+  const local = memoryStorage();
+  const { session, tabStorage } = tab({ local, server: fakeServer() });
+  session.setTokens(pair("rt-0"), false);
+
+  session.replaceTokens(pair("rt-nova-password"));
+
+  assert.equal(session.getRefreshToken(), "rt-nova-password");
+  assert.equal(JSON.parse(tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-nova-password");
+  assert.equal(local.data.has(TOKENS_KEY), false);
+});
+
+test("replaceTokens mantém a sessão recordada no localStorage", () => {
+  const local = memoryStorage();
+  const { session, tabStorage } = tab({ local, server: fakeServer() });
+  session.setTokens(pair("rt-0"), true);
+
+  session.replaceTokens(pair("rt-nova-password"));
+
+  assert.equal(JSON.parse(local.data.get(TOKENS_KEY)!).refreshToken, "rt-nova-password");
+  assert.equal(tabStorage.data.has(TOKENS_KEY), false);
+});
+
+test("canal: replaceTokens chega aos outros separadores no mesmo modo", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const server = fakeServer();
+  const a = tab({ local, server, channel: hub.open() });
+  const b = tab({ local, server, channel: hub.open() });
+  a.session.setTokens(pair("rt-0"), false);
+  await flush();
+
+  a.session.replaceTokens(pair("rt-nova-password"));
+  await flush();
+
+  assert.equal(b.session.getRefreshToken(), "rt-nova-password");
+  assert.equal(JSON.parse(b.tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-nova-password");
+  assert.equal(server.calls, 0);
+});
+
 test("sair limpa os dois armazenamentos", () => {
   const local = memoryStorage({ [TOKENS_KEY]: stored(null, "rt-velho") });
   const { session, tabStorage } = tab({ local, server: fakeServer() });
