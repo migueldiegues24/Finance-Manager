@@ -4,6 +4,7 @@ import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.LoginRequest;
 import com.miguel.financemanager.dto.RegisterRequest;
 import com.miguel.financemanager.entity.Category;
+import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
@@ -46,7 +47,8 @@ public class AuthService {
 
         seedDefaultCategories(user);
 
-        return issueTokens(user);
+        // O registo não tem a opção "Manter sessão iniciada": sessão curta.
+        return issueTokens(user, false);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -61,21 +63,22 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Email ou password inválidos"));
 
-        return issueTokens(user);
+        return issueTokens(user, request.isRememberMe());
     }
 
     public AuthResponse refresh(String rawRefreshToken) {
-        User user = refreshTokenService.consumeRefreshToken(rawRefreshToken);
-        return issueTokens(user);
+        // O sucessor herda o modo do token consumido: nunca alterna sozinho.
+        RefreshToken consumed = refreshTokenService.consumeRefreshToken(rawRefreshToken);
+        return issueTokens(consumed.getUser(), consumed.isRememberMe());
     }
 
     public void logout(String rawRefreshToken) {
         refreshTokenService.revokeToken(rawRefreshToken);
     }
 
-    private AuthResponse issueTokens(User user) {
+    private AuthResponse issueTokens(User user, boolean rememberMe) {
         String accessToken = jwtService.generateAccessToken(user.getEmail());
-        String refreshToken = refreshTokenService.createRefreshToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user, rememberMe);
         return new AuthResponse(accessToken, refreshToken);
     }
 

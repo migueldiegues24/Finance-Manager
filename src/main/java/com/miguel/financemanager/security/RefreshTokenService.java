@@ -29,14 +29,16 @@ public class RefreshTokenService {
 
     // Gera um refresh token novo (string aleatória de 64 bytes), grava só o
     // hash na BD, e devolve o valor em bruto, que só existe neste momento
-    // e vai para o cliente uma única vez.
-    public String createRefreshToken(User user) {
+    // e vai para o cliente uma única vez. rememberMe decide a validade e fica
+    // gravado, para a renovação emitir o sucessor no mesmo modo.
+    public String createRefreshToken(User user, boolean rememberMe) {
         String rawToken = generateRawToken();
 
         RefreshToken entity = RefreshToken.builder()
                 .user(user)
                 .tokenHash(hash(rawToken))
-                .expiresAt(Instant.now().plus(lifetime(true)))
+                .expiresAt(Instant.now().plus(lifetime(rememberMe)))
+                .rememberMe(rememberMe)
                 .revoked(false)
                 .build();
 
@@ -46,7 +48,8 @@ public class RefreshTokenService {
 
     // Valida o refresh token recebido e, se for válido, revoga-o (rotação:
     // cada refresh token só pode ser trocado uma vez por um novo par de tokens).
-    public User consumeRefreshToken(String rawToken) {
+    // Devolve o token consumido: quem renova precisa do utilizador e do modo.
+    public RefreshToken consumeRefreshToken(String rawToken) {
         RefreshToken stored = refreshTokenRepository.findByTokenHash(hash(rawToken))
                 .orElseThrow(() -> new IllegalArgumentException("Refresh token inválido"));
 
@@ -60,7 +63,7 @@ public class RefreshTokenService {
         stored.setRevoked(true);
         refreshTokenRepository.save(stored);
 
-        return stored.getUser();
+        return stored;
     }
 
     public void revokeToken(String rawToken) {

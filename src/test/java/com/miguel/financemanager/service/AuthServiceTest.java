@@ -4,6 +4,7 @@ import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.LoginRequest;
 import com.miguel.financemanager.dto.RegisterRequest;
 import com.miguel.financemanager.entity.Category;
+import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -67,7 +69,7 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("miguel@teste.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hashed");
         when(jwtService.generateAccessToken(anyString())).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(any(User.class))).thenReturn("refresh-token");
+        when(refreshTokenService.createRefreshToken(any(User.class), eq(false))).thenReturn("refresh-token");
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("miguel@teste.com");
@@ -99,11 +101,11 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_succeedsAndIssuesTokens() {
+    void login_succeedsAndIssuesShortSessionByDefault() {
         User user = User.builder().id(1L).email("miguel@teste.com").passwordHash("hash").build();
         when(userRepository.findByEmail("miguel@teste.com")).thenReturn(Optional.of(user));
         when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(user)).thenReturn("refresh-token");
+        when(refreshTokenService.createRefreshToken(user, false)).thenReturn("refresh-token");
 
         LoginRequest request = new LoginRequest();
         request.setEmail("miguel@teste.com");
@@ -116,11 +118,27 @@ class AuthServiceTest {
     }
 
     @Test
-    void refresh_consumesOldTokenAndIssuesNewPair() {
+    void login_withRememberMeIssuesRememberedSession() {
         User user = User.builder().id(1L).email("miguel@teste.com").passwordHash("hash").build();
-        when(refreshTokenService.consumeRefreshToken("old-raw-token")).thenReturn(user);
+        when(userRepository.findByEmail("miguel@teste.com")).thenReturn(Optional.of(user));
+        when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(user, true)).thenReturn("refresh-token");
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("miguel@teste.com");
+        request.setPassword("password123");
+        request.setRememberMe(true);
+
+        assertThat(authService.login(request).getRefreshToken()).isEqualTo("refresh-token");
+    }
+
+    @Test
+    void refresh_consumesOldTokenAndIssuesNewPairInSameMode() {
+        User user = User.builder().id(1L).email("miguel@teste.com").passwordHash("hash").build();
+        RefreshToken consumed = RefreshToken.builder().user(user).rememberMe(true).build();
+        when(refreshTokenService.consumeRefreshToken("old-raw-token")).thenReturn(consumed);
         when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("new-access");
-        when(refreshTokenService.createRefreshToken(user)).thenReturn("new-refresh");
+        when(refreshTokenService.createRefreshToken(user, true)).thenReturn("new-refresh");
 
         AuthResponse response = authService.refresh("old-raw-token");
 
