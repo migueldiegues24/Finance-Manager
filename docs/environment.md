@@ -10,7 +10,7 @@ Lidas no arranque (`src/main/resources/application.properties`).
 | `SPRING_DATASOURCE_URL` | URL JDBC da base de dados PostgreSQL. | `jdbc:postgresql://localhost:5432/financemanager` |
 | `SPRING_DATASOURCE_USERNAME` | Utilizador da base de dados. | `postgres` |
 | `SPRING_DATASOURCE_PASSWORD` | Password da base de dados. | `postgres` |
-| `ALLOWED_ORIGINS` | Origens autorizadas pelo CORS, separadas por vírgulas. | `http://localhost:5173` |
+| `ALLOWED_ORIGINS` | Origens autorizadas pelo CORS, separadas por vírgulas. Para testar localmente o build com a CSP (`vite preview`, porta 4173), incluir também essa origem: `http://localhost:5173,http://localhost:4173`. | `http://localhost:5173` |
 | `JWT_SECRET` | Chave para assinar os access tokens. | Nenhum (obrigatória) |
 | `JWT_ACCESS_EXPIRATION_MS` | Validade do access token, em milissegundos. | `900000` (15 min) |
 | `JWT_REFRESH_EXPIRATION_DAYS` | Validade do refresh token, em dias. | `30` |
@@ -42,4 +42,4 @@ Lida no build do Vite (`frontend/src/api/client.ts`).
 
 | Variável | O que faz | Por omissão |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | URL base da API do backend. | `http://localhost:8080/api` |
+| `VITE_API_BASE_URL` | URL base da API do backend. Se o domínio mudar, atualizar também o `connect-src` da CSP em `frontend/vercel.json`, senão o browser bloqueia os pedidos. | `http://localhost:8080/api` |
