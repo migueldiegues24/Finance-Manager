@@ -97,10 +97,11 @@ public class AuthService {
         refreshTokenService.revokeToken(rawRefreshToken);
     }
 
-    private AuthResponse issueTokens(User user, boolean rememberMe) {
-        String accessToken = jwtService.generateAccessToken(user.getEmail());
-        String refreshToken = refreshTokenService.createRefreshToken(user, rememberMe);
-        return new AuthResponse(accessToken, refreshToken);
+    // O refresh token é criado primeiro: o id dele vai na claim "sid" do access token.
+    AuthResponse issueTokens(User user, boolean rememberMe) {
+        RefreshTokenService.IssuedToken refreshToken = refreshTokenService.createRefreshToken(user, rememberMe);
+        String accessToken = jwtService.generateAccessToken(user.getEmail(), refreshToken.id());
+        return new AuthResponse(accessToken, refreshToken.rawToken());
     }
 
     private void seedDefaultCategories(User user) {

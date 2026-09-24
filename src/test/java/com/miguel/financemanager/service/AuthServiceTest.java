@@ -12,6 +12,7 @@ import com.miguel.financemanager.repository.UserRepository;
 import com.miguel.financemanager.security.AuthRateLimiter;
 import com.miguel.financemanager.security.JwtService;
 import com.miguel.financemanager.security.RefreshTokenService;
+import com.miguel.financemanager.security.RefreshTokenService.IssuedToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -73,8 +75,8 @@ class AuthServiceTest {
     void register_encodesPasswordSeedsSevenCategoriesAndIssuesTokens() {
         when(userRepository.existsByEmail("miguel@teste.com")).thenReturn(false);
         when(passwordEncoder.encode("senha-de-teste-42")).thenReturn("hashed");
-        when(jwtService.generateAccessToken(anyString())).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(any(User.class), eq(false))).thenReturn("refresh-token");
+        when(jwtService.generateAccessToken(anyString(), anyLong())).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(any(User.class), eq(false))).thenReturn(new IssuedToken(10L, "refresh-token"));
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("miguel@teste.com");
@@ -152,8 +154,8 @@ class AuthServiceTest {
     void login_succeedsAndIssuesShortSessionByDefault() {
         User user = User.builder().id(1L).email("miguel@teste.com").passwordHash("hash").build();
         when(userRepository.findByEmail("miguel@teste.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(user, false)).thenReturn("refresh-token");
+        when(jwtService.generateAccessToken("miguel@teste.com", 10L)).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(user, false)).thenReturn(new IssuedToken(10L, "refresh-token"));
 
         LoginRequest request = new LoginRequest();
         request.setEmail("miguel@teste.com");
@@ -172,8 +174,8 @@ class AuthServiceTest {
     void login_withRememberMeIssuesRememberedSession() {
         User user = User.builder().id(1L).email("miguel@teste.com").passwordHash("hash").build();
         when(userRepository.findByEmail("miguel@teste.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(user, true)).thenReturn("refresh-token");
+        when(jwtService.generateAccessToken("miguel@teste.com", 10L)).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(user, true)).thenReturn(new IssuedToken(10L, "refresh-token"));
 
         LoginRequest request = new LoginRequest();
         request.setEmail("miguel@teste.com");
@@ -188,8 +190,8 @@ class AuthServiceTest {
         User user = User.builder().id(1L).email("miguel@teste.com").passwordHash("hash").build();
         RefreshToken consumed = RefreshToken.builder().user(user).rememberMe(true).build();
         when(refreshTokenService.consumeRefreshToken("old-raw-token")).thenReturn(consumed);
-        when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("new-access");
-        when(refreshTokenService.createRefreshToken(user, true)).thenReturn("new-refresh");
+        when(jwtService.generateAccessToken("miguel@teste.com", 11L)).thenReturn("new-access");
+        when(refreshTokenService.createRefreshToken(user, true)).thenReturn(new IssuedToken(11L, "new-refresh"));
 
         AuthResponse response = authService.refresh("old-raw-token", "203.0.113.7");
 

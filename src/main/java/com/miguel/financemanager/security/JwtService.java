@@ -23,12 +23,18 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateAccessToken(String email) {
+    // Claim com o id do refresh token emitido no mesmo par: é o que identifica
+    // a sessão de um pedido (ex.: assinalar a atual, "terminar as outras").
+    // Muda a cada renovação, tal como o id do refresh token.
+    static final String SESSION_ID_CLAIM = "sid";
+
+    public String generateAccessToken(String email, long sessionId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpirationMs);
 
         return Jwts.builder()
                 .subject(email)
+                .claim(SESSION_ID_CLAIM, sessionId)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())
@@ -37,6 +43,11 @@ public class JwtService {
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    // null nos tokens emitidos antes de haver a claim (duram no máximo 15 min).
+    public Long extractSessionId(String token) {
+        return extractClaim(token, claims -> claims.get(SESSION_ID_CLAIM, Long.class));
     }
 
     public boolean isTokenValid(String token, String expectedEmail) {

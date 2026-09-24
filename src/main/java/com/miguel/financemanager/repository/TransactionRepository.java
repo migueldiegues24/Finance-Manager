@@ -16,6 +16,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     boolean existsByUserAndHash(User user, String hash);
 
+    List<Transaction> findByUserOrderByTransactionDateAscIdAsc(User user);
+
     List<Transaction> findByUserAndTransactionDateGreaterThanEqualAndTransactionDateLessThanOrderByTransactionDateDesc(
             User user, LocalDate start, LocalDate end);
 
@@ -60,4 +62,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Modifying
     @Query("UPDATE Transaction t SET t.category = :fallback WHERE t.category = :from")
     void reassignCategory(@Param("from") Category from, @Param("fallback") Category fallback);
+
+    // Só para apagar a conta (AccountService.deleteAccount).
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Transaction x WHERE x.user = :user")
+    int deleteAllByUser(@Param("user") User user);
 }

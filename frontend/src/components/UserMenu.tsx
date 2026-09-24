@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../theme/themeContext";
 import { initialsFromEmail } from "../utils/initials";
@@ -14,10 +15,12 @@ const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
 // Menu de utilizador (padrão "menu button"). Teclado: Enter/Espaço/↓ abrem
 // no primeiro item, ↑ abre no último; no menu, ↑/↓ circulam, Home/End vão
 // aos extremos, Enter/Espaço ativam, Esc fecha e devolve o foco ao botão,
-// Tab fecha. Clique fora fecha. Escolher o tema deixa o menu aberto.
+// Tab fecha. Clique fora fecha. Escolher o tema deixa o menu aberto;
+// "Conta" fecha-o e abre a página /account.
 export default function UserMenu() {
   const { email, logout } = useAuth();
   const { mode, setMode } = useTheme();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const menuId = useId();
@@ -100,12 +103,18 @@ export default function UserMenu() {
     next?.focus();
   }
 
+  function goToAccount() {
+    setOpen(false);
+    navigate("/account");
+  }
+
   async function handleLogout() {
     setLeaving(true);
     await logout();
   }
 
-  let index = 0;
+  // Posições: "Conta" (0), os temas (1..3) e "Sair" (último).
+  let index = 1;
   const registerItem = (el: HTMLButtonElement | null, position: number) => {
     itemRefs.current[position] = el;
   };
@@ -141,6 +150,18 @@ export default function UserMenu() {
             aria-describedby={email ? emailId : undefined}
             onKeyDown={handleMenuKeyDown}
           >
+            <button
+              ref={(el) => registerItem(el, 0)}
+              type="button"
+              role="menuitem"
+              tabIndex={-1}
+              className="user-menu__item"
+              onClick={goToAccount}
+            >
+              <span className="user-menu__check" aria-hidden="true" />
+              Conta
+            </button>
+            <div role="separator" className="user-menu__separator" />
             <div className="user-menu__label" aria-hidden="true">
               Tema
             </div>
@@ -169,7 +190,7 @@ export default function UserMenu() {
             </div>
             <div role="separator" className="user-menu__separator" />
             <button
-              ref={(el) => registerItem(el, THEME_OPTIONS.length)}
+              ref={(el) => registerItem(el, THEME_OPTIONS.length + 1)}
               type="button"
               role="menuitem"
               tabIndex={-1}

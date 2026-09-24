@@ -18,6 +18,11 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
+    // Token acabado de emitir: o valor em bruto (vai para o cliente) e o id
+    // da linha (vai para a claim "sid" do access token do mesmo par).
+    public record IssuedToken(long id, String rawToken) {
+    }
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -31,7 +36,7 @@ public class RefreshTokenService {
     // hash na BD, e devolve o valor em bruto, que só existe neste momento
     // e vai para o cliente uma única vez. rememberMe decide a validade e fica
     // gravado, para a renovação emitir o sucessor no mesmo modo.
-    public String createRefreshToken(User user, boolean rememberMe) {
+    public IssuedToken createRefreshToken(User user, boolean rememberMe) {
         String rawToken = generateRawToken();
 
         RefreshToken entity = RefreshToken.builder()
@@ -43,7 +48,7 @@ public class RefreshTokenService {
                 .build();
 
         refreshTokenRepository.save(entity);
-        return rawToken;
+        return new IssuedToken(entity.getId(), rawToken);
     }
 
     // Valida o refresh token recebido e, se for válido, revoga-o (rotação:
