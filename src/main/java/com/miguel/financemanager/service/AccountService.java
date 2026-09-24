@@ -2,8 +2,10 @@ package com.miguel.financemanager.service;
 
 import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.ChangePasswordRequest;
+import com.miguel.financemanager.dto.SessionResponse;
 import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.ResourceNotFoundException;
 import com.miguel.financemanager.repository.RefreshTokenRepository;
 import com.miguel.financemanager.repository.UserRepository;
 import com.miguel.financemanager.security.AccountRateLimiter;
@@ -12,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,6 +52,41 @@ public class AccountService {
         return authService.issueTokens(user, rememberMe);
     }
 
+    // A sessão atual (claim "sid") vem assinalada; tokens sem a claim não
+    // assinalam nenhuma.
+    @Transactional(readOnly = true)
+    public List<SessionResponse> listSessions(User user, Long currentSessionId) {
+        return activeSessions(user).stream()
+                .map(token -> new SessionResponse(
+                        token.getId(),
+                        token.getCreatedAt(),
+                        token.getExpiresAt(),
+                        token.isRememberMe() ? SessionResponse.Mode.REMEMBERED : SessionResponse.Mode.SHORT,
+                        token.getId().equals(currentSessionId)))
+                .toList();
+    }
+
+    // 404 se a sessão não existir, for de outra conta ou já não estiver ativa
+    // (a mesma resposta nos três casos). Pode ser a atual: equivale a sair.
+    @Transactional
+    public void revokeSession(User user, long sessionId) {
+        RefreshToken token = refreshTokenRepository.findByIdAndUser(sessionId, user)
+                .filter(this::isActive)
+                .orElseThrow(() -> new ResourceNotFoundException("Sessão não encontrada"));
+        token.setRevoked(true);
+        refreshTokenRepository.save(token);
+    }
+
+    // Devolve quantas sessões terminou. Sem a claim "sid" não se sabe qual é
+    // a atual, e revogar todas terminaria também esta: recusa.
+    @Transactional
+    public int revokeOtherSessions(User user, Long currentSessionId) {
+        if (currentSessionId == null) {
+            throw new IllegalArgumentException("Não foi possível identificar a sessão atual. Volta a entrar e tenta de novo.");
+        }
+        return refreshTokenRepository.revokeAllByUserExcept(user, currentSessionId);
+    }
+
     // O bloqueio é verificado antes do BCrypt: enquanto dura, até a password
     // certa recebe 429. Password errada dá 400 e não 401, que o frontend trata
     // como sessão expirada.
@@ -58,6 +97,14 @@ public class AccountService {
             throw new IllegalArgumentException("A password atual está incorreta.");
         }
         accountRateLimiter.passwordSucceeded(user.getId());
+    }
+
+    private List<RefreshToken> activeSessions(User user) {
+        return refreshTokenRepository.findByUserAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(user, Instant.now());
+    }
+
+    private boolean isActive(RefreshToken token) {
+        return !token.isRevoked() && token.getExpiresAt().isAfter(Instant.now());
     }
 
     // Sessão do pedido (claim "sid"), só se for deste utilizador.
