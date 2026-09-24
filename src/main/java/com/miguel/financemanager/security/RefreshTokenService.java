@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
 @Service
@@ -21,8 +21,11 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    @Value("${jwt.refresh-token-expiration-days}")
-    private long refreshTokenExpirationDays;
+    @Value("${jwt.refresh-token-expiration-hours-short}")
+    private long shortExpirationHours;
+
+    @Value("${jwt.refresh-token-expiration-days-remembered}")
+    private long rememberedExpirationDays;
 
     // Gera um refresh token novo (string aleatória de 64 bytes), grava só o
     // hash na BD, e devolve o valor em bruto, que só existe neste momento
@@ -33,7 +36,7 @@ public class RefreshTokenService {
         RefreshToken entity = RefreshToken.builder()
                 .user(user)
                 .tokenHash(hash(rawToken))
-                .expiresAt(Instant.now().plus(refreshTokenExpirationDays, ChronoUnit.DAYS))
+                .expiresAt(Instant.now().plus(lifetime(true)))
                 .revoked(false)
                 .build();
 
@@ -66,6 +69,13 @@ public class RefreshTokenService {
                     token.setRevoked(true);
                     refreshTokenRepository.save(token);
                 });
+    }
+
+    // Validade de um token novo: curta por omissão, longa com "Manter sessão iniciada".
+    Duration lifetime(boolean rememberMe) {
+        return rememberMe
+                ? Duration.ofDays(rememberedExpirationDays)
+                : Duration.ofHours(shortExpirationHours);
     }
 
     private String generateRawToken() {
