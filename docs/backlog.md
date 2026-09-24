@@ -28,6 +28,38 @@
   `strict-transport-security`.
   _Registado a 2026-09-24, na hotfix/forwarded-for-spoofing._
 
+- **Decisão consciente: um access token sobrevive até 15 min à revogação da
+  sua sessão.** Mudar a password, terminar uma sessão em "Sessões ativas" ou
+  "Terminar todas as outras" revogam **refresh tokens**. Os access tokens
+  (JWT, sem estado) já emitidos para essas sessões continuam a ser aceites
+  até expirarem (`JWT_ACCESS_EXPIRATION_MS`, 15 min). Nesse intervalo, um
+  dispositivo terminado (ou quem tenha roubado um access token) ainda lê e
+  altera dados. Não consegue renovar, e ao fim de no máximo 15 min perde o
+  acesso. Apagar a conta **não** tem esta janela: o
+  `JwtAuthenticationFilter` carrega o utilizador a cada pedido e, sem ele,
+  responde 401.
+
+  Aceite porque fechar a janela exige estado por pedido. Uma verificação da
+  claim `sid` contra `refresh_tokens` não serve tal como está: a rotação
+  marca o token consumido com a mesma flag `revoked` que a revogação, e o
+  `sid` de um access token válido aponta quase sempre para um token já
+  rodado. Caminhos possíveis, se o risco deixar de ser aceitável:
+  - **Versão de credenciais no utilizador** (`users.token_version`, ou
+    `password_changed_at`), incluída no JWT e comparada no filtro, que já lê
+    o utilizador a cada pedido. Fecha a janela para a mudança de password
+    (e para "terminar todas"), sem custo extra de BD. Não resolve terminar
+    **uma** sessão.
+  - **Id de sessão estável ao longo da rotação** (coluna `session_id` em
+    `refresh_tokens`, herdada na renovação, com revogação por sessão
+    distinta da rotação), verificado no filtro: fecha todos os casos, com
+    uma consulta extra por pedido.
+  - **Reduzir `JWT_ACCESS_EXPIRATION_MS`**: encurta a janela sem código,
+    mas aumenta os refreshes.
+
+  Critério de reavaliação: se a app passar a ter dados partilhados, mais de
+  uma instância, ou algum requisito de "terminar sessão já".
+  _Registado a 2026-09-24, na feat/account-page._
+
 ## Backend
 
 - **`PUT /api/rules/{id}` para editar regras.** Hoje `/api/rules` só tem
