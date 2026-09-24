@@ -3,6 +3,7 @@ package com.miguel.financemanager.service;
 import com.miguel.financemanager.dto.AccountExport;
 import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.ChangePasswordRequest;
+import com.miguel.financemanager.dto.DeleteAccountRequest;
 import com.miguel.financemanager.dto.SessionResponse;
 import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
@@ -59,6 +60,26 @@ public class AccountService {
         refreshTokenRepository.revokeAllByUser(user);
 
         return authService.issueTokens(user, rememberMe);
+    }
+
+    // Apaga a conta e tudo o que lhe pertence, por ordem e no código, sem
+    // depender do ON DELETE CASCADE das FK: transactions.category_id é
+    // RESTRICT, por isso a cascata a partir de users só funciona se o Postgres
+    // apagar as transações antes das categorias (hoje sim, pela ordem em que
+    // as FK foram criadas; não é garantido). E os testes (H2, esquema gerado
+    // pelo Hibernate) não têm cascata nenhuma: assim provam a ordem.
+    // Os access tokens emitidos deixam de valer logo: o JwtAuthenticationFilter
+    // carrega o utilizador a cada pedido.
+    @Transactional
+    public void deleteAccount(User user, DeleteAccountRequest request) {
+        verifyPassword(user, request.getPassword());
+
+        transactionRepository.deleteAllByUser(user);
+        ruleRepository.deleteAllByUser(user);
+        importRepository.deleteAllByUser(user);
+        categoryRepository.deleteAllByUser(user);
+        refreshTokenRepository.deleteAllByUser(user);
+        userRepository.deleteById(user.getId());
     }
 
     // A sessão atual (claim "sid") vem assinalada; tokens sem a claim não

@@ -3,6 +3,7 @@ package com.miguel.financemanager.controller;
 import com.miguel.financemanager.dto.AccountExport;
 import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.ChangePasswordRequest;
+import com.miguel.financemanager.dto.DeleteAccountRequest;
 import com.miguel.financemanager.dto.SessionResponse;
 import com.miguel.financemanager.security.JwtAuthenticationFilter;
 import com.miguel.financemanager.service.AccountService;
@@ -63,5 +64,12 @@ public class AccountController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(filename).build().toString())
                 .body(accountService.export(currentUserService.getCurrentUser()));
+    }
+
+    // A password atual vai no corpo, como confirmação.
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAccount(@Valid @RequestBody DeleteAccountRequest request) {
+        accountService.deleteAccount(currentUserService.getCurrentUser(), request);
+        return ResponseEntity.noContent().build();
     }
 }

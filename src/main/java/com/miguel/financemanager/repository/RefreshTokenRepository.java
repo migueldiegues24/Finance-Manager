@@ -29,4 +29,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     // Sessões ativas: não revogadas e ainda dentro da validade.
     List<RefreshToken> findByUserAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(User user, Instant now);
+
+    // Só para apagar a conta (AccountService.deleteAccount).
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM RefreshToken x WHERE x.user = :user")
+    int deleteAllByUser(@Param("user") User user);
 }
