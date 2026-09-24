@@ -6,9 +6,12 @@ import {
   ACCESS_TOKEN_MARGIN_MS,
   LEGACY_REFRESH_KEY,
   SessionEndedError,
+  SESSION_CHANNEL_NAME,
   SessionUnavailableError,
   TOKENS_KEY,
   createSessionManager,
+  openSessionChannel,
+  type BroadcastChannelLike,
   type KeyValueStorage,
   type LockManagerLike,
   type RefreshResponse,
@@ -393,4 +396,326 @@ test("só os corpos reutilizáveis permitem repetir o pedido", () => {
   assert.equal(isReplayableBody(new FormData()), true);
   assert.equal(isReplayableBody(new Blob(["x"])), true);
   assert.equal(isReplayableBody(new ReadableStream()), false);
+});
+
+// ---------- Dois modos: localStorage ("Manter sessão iniciada") e sessionStorage ----------
+
+// BroadcastChannel falso: entrega a todos os outros canais do mesmo hub, de
+// forma assíncrona, como o real (nunca ao próprio emissor).
+function channelHub() {
+  const members = new Set<{ deliver: (data: unknown) => void }>();
+  const hub = {
+    sent: [] as unknown[],
+    open(): BroadcastChannelLike {
+      const listeners: ((event: { data: unknown }) => void)[] = [];
+      const self = {
+        deliver: (data: unknown) => listeners.forEach((listener) => listener({ data })),
+      };
+      members.add(self);
+      return {
+        postMessage(message) {
+          // Como o real: a mensagem é copiada (structured clone).
+          const data = structuredClone(message);
+          hub.sent.push(data);
+          for (const other of members) if (other !== self) setTimeout(() => other.deliver(data), 0);
+        },
+        addEventListener: (_type, listener) => void listeners.push(listener),
+      };
+    },
+  };
+  return hub;
+}
+
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+// Um separador: localStorage partilhado, sessionStorage próprio.
+function tab(opts: {
+  local: KeyValueStorage;
+  tabStorage?: KeyValueStorage;
+  server: { refresh: (t: string) => Promise<RefreshResponse> };
+  channel?: BroadcastChannelLike | null;
+  locks?: LockManagerLike;
+}) {
+  const tabStorage = opts.tabStorage ?? memoryStorage();
+  const session = createSessionManager({
+    storage: opts.local,
+    tabStorage,
+    channel: opts.channel ?? null,
+    locks: opts.locks,
+    refreshRequest: (t) => opts.server.refresh(t),
+    now: () => NOW,
+  });
+  const events: SessionEvent[] = [];
+  session.subscribe((event) => events.push(event));
+  return { session, events, tabStorage: tabStorage as ReturnType<typeof memoryStorage> };
+}
+
+const pair = (refreshToken: string, user = "ana@teste.pt") => ({
+  accessToken: fakeJwt(user, 60_000, refreshToken),
+  refreshToken,
+});
+
+test("login sem 'Manter sessão iniciada' grava só no sessionStorage", () => {
+  const local = memoryStorage();
+  const { session, tabStorage } = tab({ local, server: fakeServer() });
+
+  session.setTokens(pair("rt-0"), false);
+
+  assert.equal(local.data.has(TOKENS_KEY), false);
+  assert.equal(JSON.parse(tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-0");
+});
+
+test("login com 'Manter sessão iniciada' grava só no localStorage", () => {
+  const local = memoryStorage();
+  const { session, tabStorage } = tab({ local, server: fakeServer() });
+
+  session.setTokens(pair("rt-0"), true);
+
+  assert.equal(JSON.parse(local.data.get(TOKENS_KEY)!).refreshToken, "rt-0");
+  assert.equal(tabStorage.data.has(TOKENS_KEY), false);
+});
+
+test("mudar de modo entre logins apaga o par do outro armazenamento", () => {
+  const local = memoryStorage({ [LEGACY_REFRESH_KEY]: "antigo" });
+  const { session, tabStorage } = tab({ local, server: fakeServer() });
+
+  session.setTokens(pair("rt-lembrado"), true);
+  session.setTokens(pair("rt-curto"), false);
+  assert.equal(local.data.size, 0, "localStorage fica vazio, incluindo a chave antiga");
+  assert.equal(JSON.parse(tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-curto");
+
+  session.setTokens(pair("rt-lembrado-2"), true);
+  assert.equal(tabStorage.data.has(TOKENS_KEY), false);
+  assert.equal(JSON.parse(local.data.get(TOKENS_KEY)!).refreshToken, "rt-lembrado-2");
+});
+
+test("sessão curta: o arranque lê o sessionStorage e a renovação volta a escrever lá", async () => {
+  const local = memoryStorage();
+  const tabStorage = memoryStorage({ [TOKENS_KEY]: stored(expired(), "rt-0") });
+  const server = fakeServer();
+  const { session } = tab({ local, tabStorage, server });
+
+  assert.equal(await session.restore(), true);
+  assert.equal(server.calls, 1);
+  assert.equal(JSON.parse(tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-1");
+  assert.equal(local.data.has(TOKENS_KEY), false);
+});
+
+test("sessão recordada: a renovação continua no localStorage", async () => {
+  const local = memoryStorage({ [TOKENS_KEY]: stored(expired(), "rt-0") });
+  const server = fakeServer();
+  const { session, tabStorage } = tab({ local, server });
+
+  assert.equal(await session.restore(), true);
+  assert.equal(JSON.parse(local.data.get(TOKENS_KEY)!).refreshToken, "rt-1");
+  assert.equal(tabStorage.data.has(TOKENS_KEY), false);
+});
+
+test("sair limpa os dois armazenamentos", () => {
+  const local = memoryStorage({ [TOKENS_KEY]: stored(null, "rt-velho") });
+  const { session, tabStorage } = tab({ local, server: fakeServer() });
+  session.setTokens(pair("rt-0"), false);
+  local.setItem(TOKENS_KEY, stored(null, "rt-velho"));
+
+  session.clear();
+
+  assert.equal(local.data.has(TOKENS_KEY), false);
+  assert.equal(tabStorage.data.has(TOKENS_KEY), false);
+  assert.equal(session.hasSession(), false);
+});
+
+test("canal: renovação curta num separador chega ao sessionStorage do outro, sem gastar o token duas vezes", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const server = fakeServer();
+  const locks = fakeLocks();
+  const a = tab({ local, server, locks, channel: hub.open() });
+  const b = tab({ local, server, locks, channel: hub.open() });
+  // Separador duplicado: os dois começam com a mesma cópia do sessionStorage.
+  a.session.setTokens({ accessToken: expired(), refreshToken: "rt-0" }, false);
+  await flush();
+  assert.equal(JSON.parse(b.tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-0");
+
+  await a.session.refresh();
+  await flush();
+
+  assert.equal(b.session.getRefreshToken(), "rt-1");
+  assert.equal(JSON.parse(b.tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-1");
+  assert.deepEqual(b.events, ["updated", "updated"]);
+  // B já tem um access token válido: não renova de novo.
+  await b.session.refresh();
+  assert.equal(server.calls, 1);
+  assert.equal(local.data.has(TOKENS_KEY), false);
+});
+
+test("canal: sair num separador termina a sessão curta nos outros e limpa-lhes o sessionStorage", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const a = tab({ local, server: fakeServer(), channel: hub.open() });
+  const b = tab({ local, server: fakeServer(), channel: hub.open() });
+  a.session.setTokens(pair("rt-0"), false);
+  await flush();
+
+  a.session.clear();
+  await flush();
+
+  assert.equal(b.session.hasSession(), false);
+  assert.equal(b.events.at(-1), "ended");
+  assert.equal(b.tabStorage.data.has(TOKENS_KEY), false);
+});
+
+test("canal: sair também funciona na sessão recordada", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const a = tab({ local, server: fakeServer(), channel: hub.open() });
+  const b = tab({ local, server: fakeServer(), channel: hub.open() });
+  a.session.setTokens(pair("rt-0"), true);
+  await flush();
+  assert.equal(b.session.getRefreshToken(), "rt-0");
+
+  a.session.clear();
+  await flush();
+
+  assert.equal(b.session.hasSession(), false);
+  assert.equal(local.data.has(TOKENS_KEY), false);
+});
+
+test("canal: o servidor recusar o token num separador termina a sessão em todos", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const server = fakeServer();
+  const a = tab({ local, server, channel: hub.open() });
+  const b = tab({ local, server, channel: hub.open() });
+  a.session.setTokens({ accessToken: expired(), refreshToken: "rt-revogado" }, false);
+  await flush();
+
+  await assert.rejects(a.session.refresh(), SessionEndedError);
+  await flush();
+
+  assert.equal(b.session.hasSession(), false);
+  assert.equal(b.tabStorage.data.has(TOKENS_KEY), false);
+});
+
+test("canal: login curto noutro separador passa este para sessão curta", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const a = tab({ local, server: fakeServer(), channel: hub.open() });
+  const b = tab({ local, server: fakeServer(), channel: hub.open() });
+  b.session.setTokens(pair("rt-lembrado"), true);
+  await flush();
+
+  a.session.setTokens(pair("rt-curto"), false);
+  await flush();
+
+  assert.equal(b.session.getRefreshToken(), "rt-curto");
+  assert.equal(b.session.hasSession(), true);
+  assert.equal(JSON.parse(b.tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-curto");
+  assert.equal(local.data.has(TOKENS_KEY), false);
+  assert.ok(!b.events.includes("ended"), "a limpeza do localStorage não conta como logout");
+});
+
+test("canal: login de outra conta guarda o par novo e pede recomeço", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const a = tab({ local, server: fakeServer(), channel: hub.open() });
+  const b = tab({ local, server: fakeServer(), channel: hub.open() });
+  b.session.setTokens(pair("rt-ana"), false);
+  await flush();
+
+  a.session.setTokens(pair("rt-rui", "rui@teste.pt"), false);
+  await flush();
+
+  assert.equal(b.events.at(-1), "user-changed");
+  assert.equal(b.session.hasSession(), false);
+  // O reload que se segue encontra a sessão da conta nova, não a antiga.
+  assert.equal(JSON.parse(b.tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-rui");
+});
+
+test("canal: com canal o evento storage é ignorado (o canal já traz tudo)", () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const { session, events } = tab({ local, server: fakeServer(), channel: hub.open() });
+  session.setTokens(pair("rt-0"), true);
+
+  session.handleStorageChange(TOKENS_KEY, null);
+
+  assert.equal(session.hasSession(), true);
+  assert.deepEqual(events, []);
+});
+
+test("canal: mensagens inválidas são ignoradas", async () => {
+  const local = memoryStorage();
+  const hub = channelHub();
+  const sender = hub.open();
+  const { session, events } = tab({ local, server: fakeServer(), channel: hub.open() });
+  session.setTokens(pair("rt-0"), false);
+
+  for (const data of [null, "ended", { type: "tokens" }, { type: "tokens", remember: true, tokens: { accessToken: 1 } }, { type: "outro" }]) {
+    sender.postMessage(data);
+  }
+  await flush();
+
+  assert.equal(session.getRefreshToken(), "rt-0");
+  assert.deepEqual(events, []);
+});
+
+test("sem BroadcastChannel: openSessionChannel devolve null, também se o construtor falhar", () => {
+  assert.equal(openSessionChannel(undefined), null);
+  class Failing {
+    constructor() {
+      throw new Error("SecurityError");
+    }
+  }
+  assert.equal(openSessionChannel(Failing as unknown as new (name: string) => BroadcastChannelLike), null);
+
+  const names: string[] = [];
+  class Working {
+    constructor(name: string) {
+      names.push(name);
+    }
+    postMessage() {}
+    addEventListener() {}
+  }
+  assert.ok(openSessionChannel(Working) instanceof Working);
+  assert.deepEqual(names, [SESSION_CHANNEL_NAME]);
+});
+
+test("sem BroadcastChannel: os dois modos funcionam no separador e o evento storage sincroniza a sessão recordada", async () => {
+  const local = memoryStorage();
+  const server = fakeServer();
+  const a = tab({ local, server, channel: null });
+  const b = tab({ local, server, channel: null });
+
+  // Curto: grava e renova no sessionStorage deste separador, sem erro.
+  a.session.setTokens({ accessToken: expired(), refreshToken: "rt-0" }, false);
+  await a.session.refresh();
+  assert.equal(JSON.parse(a.tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-1");
+  // Limitação documentada: o outro separador não sabe desta sessão curta.
+  assert.equal(b.session.hasSession(), false);
+
+  // Recordada: o evento storage continua a levar login e logout ao outro separador.
+  a.session.setTokens(pair("rt-lembrado"), true);
+  b.session.handleStorageChange(TOKENS_KEY, local.getItem(TOKENS_KEY));
+  assert.equal(b.session.getRefreshToken(), "rt-lembrado");
+  a.session.clear();
+  b.session.handleStorageChange(TOKENS_KEY, null);
+  assert.equal(b.session.hasSession(), false);
+});
+
+test("canal que falha ao enviar não impede login, renovação nem logout", async () => {
+  const local = memoryStorage();
+  const broken: BroadcastChannelLike = {
+    postMessage() {
+      throw new Error("DataCloneError");
+    },
+    addEventListener() {},
+  };
+  const server = fakeServer();
+  const { session, tabStorage } = tab({ local, server, channel: broken });
+
+  session.setTokens({ accessToken: expired(), refreshToken: "rt-0" }, false);
+  await session.refresh();
+  assert.equal(JSON.parse(tabStorage.data.get(TOKENS_KEY)!).refreshToken, "rt-1");
+  session.clear();
+  assert.equal(session.hasSession(), false);
 });
