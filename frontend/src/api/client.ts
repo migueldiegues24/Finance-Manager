@@ -1,13 +1,30 @@
 import { isReplayableBody } from "./body";
-import { createSessionManager, SessionEndedError, type KeyValueStorage, type LockManagerLike } from "./session";
+import {
+  createSessionManager,
+  SESSION_CHANNEL_NAME,
+  SessionEndedError,
+  type BroadcastChannelLike,
+  type KeyValueStorage,
+  type LockManagerLike,
+} from "./session";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
 
 const REFRESH_TIMEOUT_MS = 10_000;
 
-function browserStorage(): KeyValueStorage | null {
+function browserStorage(area: "localStorage" | "sessionStorage"): KeyValueStorage | null {
   try {
-    return window.localStorage;
+    return window[area];
+  } catch {
+    return null;
+  }
+}
+
+// Sem BroadcastChannel a sessão funciona na mesma; só perde a sincronização
+// entre separadores no modo curto (ver api/session.ts).
+function browserChannel(): BroadcastChannelLike | null {
+  try {
+    return typeof BroadcastChannel === "function" ? new BroadcastChannel(SESSION_CHANNEL_NAME) : null;
   } catch {
     return null;
   }
@@ -19,7 +36,9 @@ function browserLocks(): LockManagerLike | null {
 
 // Sessão partilhada por toda a app (ver api/session.ts).
 export const session = createSessionManager({
-  storage: browserStorage(),
+  storage: browserStorage("localStorage"),
+  tabStorage: browserStorage("sessionStorage"),
+  channel: browserChannel(),
   locks: browserLocks(),
   refreshRequest: (refreshToken) =>
     fetch(`${API_BASE}/auth/refresh`, {

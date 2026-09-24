@@ -308,7 +308,7 @@ test("armazenamento que lança: a sessão continua em memória", async () => {
   };
   const server = fakeServer();
   const { session } = manager(throwing, server);
-  session.setTokens({ accessToken: expired(), refreshToken: "rt-0" });
+  session.setTokens({ accessToken: expired(), refreshToken: "rt-0" }, true);
 
   await session.refresh();
   assert.equal(session.getRefreshToken(), "rt-1");
@@ -355,7 +355,7 @@ test("renovação que encontra no armazenamento a sessão de outro utilizador n�
   const storage = memoryStorage({ [TOKENS_KEY]: stored(expired(), "rt-0") });
   const server = fakeServer();
   const { session, events } = manager(storage, server);
-  session.setTokens({ accessToken: expired(), refreshToken: "rt-0" });
+  session.setTokens({ accessToken: expired(), refreshToken: "rt-0" }, true);
   storage.setItem(TOKENS_KEY, stored(fakeJwt("rui@teste.pt", -1_000), "rt-rui"));
 
   await assert.rejects(session.refresh(), SessionEndedError);

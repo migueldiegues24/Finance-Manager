@@ -121,14 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     const data = await requestTokens("login", email, password);
-    session.setTokens(data);
+    session.setTokens(data, true);
     setEmail(decodeJwtSubject(data.accessToken));
     setIsAuthenticated(true);
   }
 
   async function register(email: string, password: string) {
     const data = await requestTokens("register", email, password);
-    session.setTokens(data);
+    session.setTokens(data, true);
     setEmail(decodeJwtSubject(data.accessToken));
     setIsAuthenticated(true);
   }
