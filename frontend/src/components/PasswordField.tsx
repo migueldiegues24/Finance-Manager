@@ -5,6 +5,7 @@ interface PasswordFieldProps {
   onChange: (value: string) => void;
   autoComplete: "current-password" | "new-password";
   minLength?: number;
+  maxLength?: number;
   // Texto de ajuda por baixo do campo, ligado por aria-describedby.
   hint?: string;
 }
@@ -12,7 +13,7 @@ interface PasswordFieldProps {
 // Password com um botão de alternância "Mostrar password". O nome é fixo
 // e o estado vem de aria-pressed (padrão de toggle button); visualmente, o
 // estado ligado fica sublinhado e a própria password passa a ver-se.
-export default function PasswordField({ value, onChange, autoComplete, minLength, hint }: PasswordFieldProps) {
+export default function PasswordField({ value, onChange, autoComplete, minLength, maxLength, hint }: PasswordFieldProps) {
   const inputId = useId();
   const hintId = useId();
   const [visible, setVisible] = useState(false);
@@ -31,6 +32,7 @@ export default function PasswordField({ value, onChange, autoComplete, minLength
           value={value}
           onChange={(event) => onChange(event.target.value)}
           minLength={minLength}
+          maxLength={maxLength}
           aria-describedby={hint ? hintId : undefined}
           required
         />

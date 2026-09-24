@@ -38,7 +38,7 @@ class CategorizationRuleControllerIntegrationTest {
     @BeforeEach
     void registerUserAndFindCategory() throws Exception {
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "ruletest@teste.com", "password", "password123"));
+                Map.of("email", "ruletest@teste.com", "password", "senha-de-teste-42"));
 
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

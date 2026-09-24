@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RefreshTokenModeIntegrationTest {
 
     private static final String EMAIL = "modo@teste.com";
-    private static final String PASSWORD = "password123";
+    private static final String PASSWORD = "senha-de-teste-42";
     private static final Duration SHORT = Duration.ofHours(12);
     private static final Duration REMEMBERED = Duration.ofDays(14);
 

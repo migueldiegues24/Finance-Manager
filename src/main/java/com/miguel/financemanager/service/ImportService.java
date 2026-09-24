@@ -9,6 +9,7 @@ import com.miguel.financemanager.exception.ImportConflictException;
 import com.miguel.financemanager.repository.TransactionRepository;
 import com.miguel.financemanager.service.parsing.Bank;
 import com.miguel.financemanager.service.parsing.ParsedTransaction;
+import com.miguel.financemanager.service.parsing.StatementParser;
 import com.miguel.financemanager.service.parsing.StatementParserRegistry;
 import com.miguel.financemanager.service.util.TransactionFingerprint;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +67,10 @@ public class ImportService {
     // movimentos ao mesmo tempo, a primeira tentativa viola o índice único e
     // é revertida por inteiro; a segunda já vê essas linhas e ignora-as.
     public ImportSummaryResponse confirmImport(ConfirmImportRequest request) {
+        List<?> transactions = request.getTransactions();
+        if (transactions != null && transactions.size() > StatementParser.MAX_TRANSACTIONS) {
+            throw StatementParser.tooManyTransactions();
+        }
         User user = currentUserService.getCurrentUser();
         try {
             return importWriter.write(user, request);

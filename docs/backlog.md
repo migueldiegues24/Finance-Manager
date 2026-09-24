@@ -21,7 +21,56 @@
   o utilizador pode trocar a categoria antes de confirmar.
   _Registado a 2026-09-21, na feat/category-colors._
 
+## Dependências
+
+- **Majors e 0.x adiadas (sem vulnerabilidade conhecida).** Verificado a
+  2026-09-24 com `npm audit` (0 vulnerabilidades) e
+  `mvn org.codehaus.mojo:versions-maven-plugin:2.21.0:display-dependency-updates`:
+  - `io.jsonwebtoken:jjwt-*` 0.12.6 → 0.13.0: numa série 0.x a minor pode
+    partir API; rever o changelog e os testes do `JwtService` antes.
+  - `typescript` 6 → 7 e `@types/node` 24 → 26: majors; correr `tsc -b`,
+    ESLint (`typescript-eslint` tem de suportar a versão) e o build.
+  - Spring Boot 4.1.1 é a última estável (só há 4.2.0-M1); h2, lombok e
+    flyway-database-postgresql vêm do BOM e sobem com o Boot.
+  _Registado a 2026-09-24, na feat/security-headers-deps._
+
+- **`./mvnw` não funciona.** Falta `.mvn/wrapper/maven-wrapper.properties`
+  no repositório; hoje usa-se o `mvn` do sistema (o Dockerfile usa a
+  imagem do Maven, por isso o deploy não depende disto). Regenerar com
+  `mvn wrapper:wrapper` e commitar a pasta `.mvn/`.
+  _Registado a 2026-09-24, na feat/security-headers-deps._
+
+## Frontend
+
+- **CSP bloqueia a barra de ferramentas do Vercel nos previews.** A CSP do
+  `vercel.json` só autoriza scripts do próprio domínio, por isso a Vercel
+  Toolbar (comentários nos preview deployments, carregada de
+  `vercel.live`) não abre. Se fizer falta, acrescentar `https://vercel.live`
+  a `script-src`, `connect-src`, `frame-src` e `img-src`, idealmente só nos
+  previews. _Registado a 2026-09-24, na feat/security-headers-deps._
+
 ## Autenticação (frontend e backend)
+
+- **[Prioridade alta] O registo revela se um email já existe.** Um
+  `POST /api/auth/register` com um email registado responde 400 "Já existe
+  uma conta com este email", o que permite testar se alguém tem conta
+  (enumeração de contas). O login já não o revela, e o limite de 10 registos
+  por hora por IP (feat/auth-rate-limiting) só abranda o ataque, não o
+  impede. Resolver com a verificação de email: o registo responde sempre o
+  mesmo ("enviámos um email de confirmação") e, se a conta já existir, o
+  email enviado avisa o dono em vez de criar outra.
+  _Registado a 2026-09-23, na feat/auth-rate-limiting._
+
+- **Subir o custo do BCrypt para 12, com rehash no login.** Hoje é o padrão
+  do `BCryptPasswordEncoder` (10). Com 12 cada hash custa ~4x mais, o que
+  abranda um ataque offline se a BD fugir (o login fica ~4x mais lento, o
+  que o limite de tentativas torna aceitável). Como o custo vai dentro de
+  cada hash, as passwords atuais continuam a funcionar; para as migrar,
+  implementar `UserDetailsPasswordService` (o `DaoAuthenticationProvider`
+  chama-o num login certo quando `upgradeEncoding` diz que o hash é fraco)
+  e gravar o novo hash. Medir o tempo de um hash na máquina do Railway antes
+  de escolher o custo final.
+  _Registado a 2026-09-23, na feat/auth-rate-limiting._
 
 - ~~**Renovação concorrente da sessão perde a sessão.**~~ **Resolvido** na
   `fix/session-refresh` (2026-09-21), só no frontend (`api/session.ts`):

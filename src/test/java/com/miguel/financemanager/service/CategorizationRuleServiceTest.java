@@ -5,6 +5,7 @@ import com.miguel.financemanager.dto.RuleResponse;
 import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.CategorizationRule;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.ResourceNotFoundException;
 import com.miguel.financemanager.repository.CategorizationRuleRepository;
 import com.miguel.financemanager.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -114,7 +115,7 @@ class CategorizationRuleServiceTest {
         when(ruleRepository.findById(9L)).thenReturn(Optional.of(rule));
 
         assertThatThrownBy(() -> ruleService.deleteRule(9L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("não encontrada");
 
         verify(ruleRepository, never()).delete(any());

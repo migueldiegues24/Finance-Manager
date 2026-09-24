@@ -17,10 +17,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.time.Duration;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +54,9 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    @Value("${request-body.read-timeout:30s}")
+    private Duration requestBodyReadTimeout;
+
     @Value("${allowed.origins:http://localhost:5173}")
     private String allowedOrigins;
 
@@ -71,6 +78,20 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // nosniff, DENY e Cache-Control já vêm por omissão; ficam explícitos
+                // para não se perderem se alguém mexer nos headers. A API só devolve
+                // JSON, por isso a CSP não deixa carregar nada nem embeber a resposta.
+                // O HSTS só sai em pedidos HTTPS: atrás do proxy do Railway depende de
+                // server.forward-headers-strategy=framework (X-Forwarded-Proto).
+                .headers(headers -> headers
+                        .contentTypeOptions(contentTypeOptions -> {})
+                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'"))
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .maxAgeInSeconds(31536000)
+                                .includeSubDomains(false))
+                )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
@@ -78,6 +99,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                // Logo a seguir ao CORS: as respostas 413/408 levam os cabeçalhos
+                // CORS e o limite aplica-se antes da autenticação. Não é um @Bean
+                // de propósito, para o Spring Boot não o registar outra vez fora
+                // desta cadeia.
+                .addFilterAfter(new RequestBodyLimitFilter(requestBodyReadTimeout), CorsFilter.class)
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

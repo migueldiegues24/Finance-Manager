@@ -53,7 +53,7 @@ class RegistrationDisabledIntegrationTest {
         long categoriesBefore = categoryRepository.count();
 
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "novo@teste.com", "password", "password123"));
+                Map.of("email", "novo@teste.com", "password", "senha-de-teste-42"));
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,11 +91,11 @@ class RegistrationDisabledIntegrationTest {
         // Conta criada diretamente, como se já existisse antes de desligar o registo.
         userRepository.save(User.builder()
                 .email("existente@teste.com")
-                .passwordHash(passwordEncoder.encode("password123"))
+                .passwordHash(passwordEncoder.encode("senha-de-teste-42"))
                 .build());
 
         String loginBody = objectMapper.writeValueAsString(
-                Map.of("email", "existente@teste.com", "password", "password123"));
+                Map.of("email", "existente@teste.com", "password", "senha-de-teste-42"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

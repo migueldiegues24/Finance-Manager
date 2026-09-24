@@ -39,7 +39,7 @@ class CategoryControllerIntegrationTest {
     @BeforeEach
     void registerUser() throws Exception {
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "cattest@teste.com", "password", "password123"));
+                Map.of("email", "cattest@teste.com", "password", "senha-de-teste-42"));
 
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -240,7 +240,7 @@ class CategoryControllerIntegrationTest {
 
         MvcResult other = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("email", "outro-cor@teste.com", "password", "password123"))))
+                        .content(objectMapper.writeValueAsString(Map.of("email", "outro-cor@teste.com", "password", "senha-de-teste-42"))))
                 .andReturn();
         String otherToken = objectMapper.readTree(other.getResponse().getContentAsString()).get("accessToken").asText();
 
@@ -248,7 +248,7 @@ class CategoryControllerIntegrationTest {
                         .header("Authorization", "Bearer " + otherToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("name", "Minha", "color", "#000000"))))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Categoria não encontrada"));
 
         mockMvc.perform(get("/api/categories").header("Authorization", "Bearer " + accessToken))

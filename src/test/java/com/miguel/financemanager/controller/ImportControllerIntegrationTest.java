@@ -43,7 +43,7 @@ class ImportControllerIntegrationTest {
     @BeforeEach
     void registerUser() throws Exception {
         String body = objectMapper.writeValueAsString(
-                Map.of("email", "importtest@teste.com", "password", "password123"));
+                Map.of("email", "importtest@teste.com", "password", "senha-de-teste-42"));
 
         MvcResult result = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

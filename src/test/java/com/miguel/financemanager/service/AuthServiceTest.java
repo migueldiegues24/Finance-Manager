@@ -6,8 +6,10 @@ import com.miguel.financemanager.dto.RegisterRequest;
 import com.miguel.financemanager.entity.Category;
 import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
+import com.miguel.financemanager.exception.TooManyAttemptsException;
 import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.UserRepository;
+import com.miguel.financemanager.security.AuthRateLimiter;
 import com.miguel.financemanager.security.JwtService;
 import com.miguel.financemanager.security.RefreshTokenService;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,6 +48,8 @@ class AuthServiceTest {
     private JwtService jwtService;
     @Mock
     private RefreshTokenService refreshTokenService;
+    @Mock
+    private AuthRateLimiter authRateLimiter;
 
     @InjectMocks
     private AuthService authService;
@@ -55,9 +60,9 @@ class AuthServiceTest {
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
 
-        assertThatThrownBy(() -> authService.register(request))
+        assertThatThrownBy(() -> authService.register(request, "203.0.113.7"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Já existe");
 
@@ -67,17 +72,19 @@ class AuthServiceTest {
     @Test
     void register_encodesPasswordSeedsSevenCategoriesAndIssuesTokens() {
         when(userRepository.existsByEmail("miguel@teste.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("hashed");
+        when(passwordEncoder.encode("senha-de-teste-42")).thenReturn("hashed");
         when(jwtService.generateAccessToken(anyString())).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken(any(User.class), eq(false))).thenReturn("refresh-token");
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
 
-        AuthResponse response = authService.register(request);
+        AuthResponse response = authService.register(request, "203.0.113.7");
 
-        verify(passwordEncoder).encode("password123");
+        verify(authRateLimiter).registerAttempted("203.0.113.7");
+
+        verify(passwordEncoder).encode("senha-de-teste-42");
         verify(userRepository).save(any(User.class));
         // 6 categorias sugeridas + "Sem Categoria"
         verify(categoryRepository, times(7)).save(any(Category.class));
@@ -95,9 +102,50 @@ class AuthServiceTest {
         request.setEmail("miguel@teste.com");
         request.setPassword("errada");
 
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(request, "203.0.113.7"))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("inválidos");
+
+        verify(authRateLimiter).checkLogin("203.0.113.7", "miguel@teste.com");
+        verify(authRateLimiter).loginFailed("203.0.113.7", "miguel@teste.com");
+        verify(authRateLimiter, never()).loginSucceeded(anyString(), anyString());
+    }
+
+    @Test
+    void login_whenBlocked_doesNotCheckPassword() {
+        doThrow(new TooManyAttemptsException(30)).when(authRateLimiter).checkLogin("203.0.113.7", "miguel@teste.com");
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("miguel@teste.com");
+        request.setPassword("senha-de-teste-42");
+
+        assertThatThrownBy(() -> authService.login(request, "203.0.113.7"))
+                .isInstanceOf(TooManyAttemptsException.class);
+        verify(authenticationManager, never()).authenticate(any());
+    }
+
+    @Test
+    void register_rejectsCommonPassword_withoutCountingTowardLimit() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("miguel@teste.com");
+        request.setPassword("Password1234");
+
+        assertThatThrownBy(() -> authService.register(request, "203.0.113.7"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("demasiado comum");
+
+        verify(authRateLimiter, never()).registerAttempted(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void refresh_recordsFailureForInvalidToken() {
+        when(refreshTokenService.consumeRefreshToken("bad")).thenThrow(new IllegalArgumentException("Refresh token inválido"));
+
+        assertThatThrownBy(() -> authService.refresh("bad", "203.0.113.7"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(authRateLimiter).refreshFailed("203.0.113.7");
     }
 
     @Test
@@ -109,9 +157,12 @@ class AuthServiceTest {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
 
-        AuthResponse response = authService.login(request);
+        AuthResponse response = authService.login(request, "203.0.113.7");
+
+        verify(authRateLimiter).loginSucceeded("203.0.113.7", "miguel@teste.com");
+        verify(authRateLimiter, never()).loginFailed(anyString(), anyString());
 
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
@@ -126,10 +177,10 @@ class AuthServiceTest {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("miguel@teste.com");
-        request.setPassword("password123");
+        request.setPassword("senha-de-teste-42");
         request.setRememberMe(true);
 
-        assertThat(authService.login(request).getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(authService.login(request, "203.0.113.7").getRefreshToken()).isEqualTo("refresh-token");
     }
 
     @Test
@@ -140,9 +191,11 @@ class AuthServiceTest {
         when(jwtService.generateAccessToken("miguel@teste.com")).thenReturn("new-access");
         when(refreshTokenService.createRefreshToken(user, true)).thenReturn("new-refresh");
 
-        AuthResponse response = authService.refresh("old-raw-token");
+        AuthResponse response = authService.refresh("old-raw-token", "203.0.113.7");
 
+        verify(authRateLimiter).checkRefresh("203.0.113.7");
         verify(refreshTokenService).consumeRefreshToken("old-raw-token");
+        verify(authRateLimiter, never()).refreshFailed(anyString());
         assertThat(response.getAccessToken()).isEqualTo("new-access");
         assertThat(response.getRefreshToken()).isEqualTo("new-refresh");
     }

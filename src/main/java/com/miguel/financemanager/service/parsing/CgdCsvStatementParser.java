@@ -51,6 +51,9 @@ public class CgdCsvStatementParser implements StatementParser {
                 if (line.isBlank()) {
                     continue;
                 }
+                if (rows.size() == MAX_TRANSACTIONS) {
+                    throw StatementParser.tooManyTransactions();
+                }
                 rows.add(new Row(lineNumber, parseRow(line, lineNumber)));
             }
         }
