@@ -1,6 +1,9 @@
 import { useId, useState } from "react";
+import "./PasswordField.css";
 
 interface PasswordFieldProps {
+  // Rótulo visível; por omissão "Password".
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: "current-password" | "new-password";
@@ -13,7 +16,15 @@ interface PasswordFieldProps {
 // Password com um botão de alternância "Mostrar password". O nome é fixo
 // e o estado vem de aria-pressed (padrão de toggle button); visualmente, o
 // estado ligado fica sublinhado e a própria password passa a ver-se.
-export default function PasswordField({ value, onChange, autoComplete, minLength, maxLength, hint }: PasswordFieldProps) {
+export default function PasswordField({
+  label = "Password",
+  value,
+  onChange,
+  autoComplete,
+  minLength,
+  maxLength,
+  hint,
+}: PasswordFieldProps) {
   const inputId = useId();
   const hintId = useId();
   const [visible, setVisible] = useState(false);
@@ -21,7 +32,7 @@ export default function PasswordField({ value, onChange, autoComplete, minLength
   return (
     <div className="auth-field">
       <label className="field-label" htmlFor={inputId}>
-        Password
+        {label}
       </label>
       <div className="password-field">
         <input

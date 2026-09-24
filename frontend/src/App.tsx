@@ -11,6 +11,7 @@ import ImportPage from "./pages/ImportPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import RulesPage from "./pages/RulesPage";
+import AccountPage from "./pages/AccountPage";
 
 export default function App() {
   return (
@@ -57,6 +58,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <RulesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/account"
+              element={
+                <ProtectedRoute>
+                  <AccountPage />
                 </ProtectedRoute>
               }
             />
