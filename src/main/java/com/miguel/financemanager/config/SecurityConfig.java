@@ -81,8 +81,9 @@ public class SecurityConfig {
                 // nosniff, DENY e Cache-Control já vêm por omissão; ficam explícitos
                 // para não se perderem se alguém mexer nos headers. A API só devolve
                 // JSON, por isso a CSP não deixa carregar nada nem embeber a resposta.
-                // O HSTS só sai em pedidos HTTPS: atrás do proxy do Railway depende de
-                // server.forward-headers-strategy=framework (X-Forwarded-Proto).
+                // O HSTS só sai em pedidos HTTPS. Atrás do proxy do Railway o pedido
+                // chega como HTTP, por isso hoje não sai em produção: ver
+                // application.properties (forward-headers-strategy) e docs/backlog.md.
                 .headers(headers -> headers
                         .contentTypeOptions(contentTypeOptions -> {})
                         .frameOptions(frameOptions -> frameOptions.deny())
