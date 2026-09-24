@@ -117,6 +117,19 @@ export function parseStoredTokens(raw: string | null): StoredTokens | null {
   }
 }
 
+// Abre o canal entre separadores, se o browser o suportar. Sem suporte (ou se
+// o construtor falhar) devolve null e a sessão continua a funcionar sem ele.
+export function openSessionChannel(
+  Channel: (new (name: string) => BroadcastChannelLike) | undefined,
+): BroadcastChannelLike | null {
+  if (typeof Channel !== "function") return null;
+  try {
+    return new Channel(SESSION_CHANNEL_NAME);
+  } catch {
+    return null;
+  }
+}
+
 function parseMessage(data: unknown): SessionMessage | null {
   if (!data || typeof data !== "object") return null;
   const { type, tokens, remember } = data as Record<string, unknown>;

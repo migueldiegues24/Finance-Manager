@@ -1,9 +1,8 @@
 import { isReplayableBody } from "./body";
 import {
   createSessionManager,
-  SESSION_CHANNEL_NAME,
+  openSessionChannel,
   SessionEndedError,
-  type BroadcastChannelLike,
   type KeyValueStorage,
   type LockManagerLike,
 } from "./session";
@@ -20,16 +19,6 @@ function browserStorage(area: "localStorage" | "sessionStorage"): KeyValueStorag
   }
 }
 
-// Sem BroadcastChannel a sessão funciona na mesma; só perde a sincronização
-// entre separadores no modo curto (ver api/session.ts).
-function browserChannel(): BroadcastChannelLike | null {
-  try {
-    return typeof BroadcastChannel === "function" ? new BroadcastChannel(SESSION_CHANNEL_NAME) : null;
-  } catch {
-    return null;
-  }
-}
-
 function browserLocks(): LockManagerLike | null {
   return typeof navigator !== "undefined" && navigator.locks ? navigator.locks : null;
 }
@@ -38,7 +27,9 @@ function browserLocks(): LockManagerLike | null {
 export const session = createSessionManager({
   storage: browserStorage("localStorage"),
   tabStorage: browserStorage("sessionStorage"),
-  channel: browserChannel(),
+  // Sem BroadcastChannel a sessão funciona na mesma; só perde a sincronização
+  // entre separadores no modo curto (ver api/session.ts).
+  channel: openSessionChannel(typeof BroadcastChannel === "undefined" ? undefined : BroadcastChannel),
   locks: browserLocks(),
   refreshRequest: (refreshToken) =>
     fetch(`${API_BASE}/auth/refresh`, {
