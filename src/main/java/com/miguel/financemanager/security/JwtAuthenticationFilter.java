@@ -19,6 +19,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    // Atributo do pedido com o id da sessão (claim "sid") de um pedido
+    // autenticado; ausente nos tokens sem a claim.
+    public static final String SESSION_ID_ATTRIBUTE = "financemanager.sessionId";
+
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
@@ -47,6 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    Long sessionId = jwtService.extractSessionId(token);
+                    if (sessionId != null) {
+                        request.setAttribute(SESSION_ID_ATTRIBUTE, sessionId);
+                    }
                 }
             }
         } catch (Exception e) {
