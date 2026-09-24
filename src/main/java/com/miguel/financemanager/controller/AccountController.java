@@ -1,5 +1,6 @@
 package com.miguel.financemanager.controller;
 
+import com.miguel.financemanager.dto.AccountExport;
 import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.ChangePasswordRequest;
 import com.miguel.financemanager.dto.SessionResponse;
@@ -8,9 +9,12 @@ import com.miguel.financemanager.service.AccountService;
 import com.miguel.financemanager.service.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -47,5 +51,17 @@ public class AccountController {
             @RequestAttribute(name = JwtAuthenticationFilter.SESSION_ID_ATTRIBUTE, required = false) Long sessionId) {
         int revoked = accountService.revokeOtherSessions(currentUserService.getCurrentUser(), sessionId);
         return ResponseEntity.ok(Map.of("revoked", revoked));
+    }
+
+    // Resposta potencialmente grande a SAIR: o limite de corpo (RequestBodyLimitFilter)
+    // só se aplica ao que o cliente envia. O custo é travado por um limite de
+    // pedidos por hora (AccountRateLimiter), não por tamanho.
+    @GetMapping("/export")
+    public ResponseEntity<AccountExport> export() {
+        String filename = "finance-manager-" + LocalDate.now() + ".json";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(filename).build().toString())
+                .body(accountService.export(currentUserService.getCurrentUser()));
     }
 }

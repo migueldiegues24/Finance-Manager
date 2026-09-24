@@ -1,12 +1,17 @@
 package com.miguel.financemanager.service;
 
+import com.miguel.financemanager.dto.AccountExport;
 import com.miguel.financemanager.dto.AuthResponse;
 import com.miguel.financemanager.dto.ChangePasswordRequest;
 import com.miguel.financemanager.dto.SessionResponse;
 import com.miguel.financemanager.entity.RefreshToken;
 import com.miguel.financemanager.entity.User;
 import com.miguel.financemanager.exception.ResourceNotFoundException;
+import com.miguel.financemanager.repository.CategorizationRuleRepository;
+import com.miguel.financemanager.repository.CategoryRepository;
 import com.miguel.financemanager.repository.RefreshTokenRepository;
+import com.miguel.financemanager.repository.StatementImportRepository;
+import com.miguel.financemanager.repository.TransactionRepository;
 import com.miguel.financemanager.repository.UserRepository;
 import com.miguel.financemanager.security.AccountRateLimiter;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,10 @@ public class AccountService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final CategoryRepository categoryRepository;
+    private final CategorizationRuleRepository ruleRepository;
+    private final StatementImportRepository importRepository;
+    private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountRateLimiter accountRateLimiter;
     private final AuthService authService;
@@ -85,6 +94,40 @@ public class AccountService {
             throw new IllegalArgumentException("Não foi possível identificar a sessão atual. Volta a entrar e tenta de novo.");
         }
         return refreshTokenRepository.revokeAllByUserExcept(user, currentSessionId);
+    }
+
+    // Tudo lido de uma vez, em memória: com os volumes desta app (milhares de
+    // movimentos) são poucos MB. As categorias e importações ficam no contexto
+    // de persistência, por isso ler as das regras e transações não faz consultas.
+    @Transactional(readOnly = true)
+    public AccountExport export(User user) {
+        accountRateLimiter.exportRequested(user.getId());
+
+        List<AccountExport.CategoryEntry> categories = categoryRepository.findByUserOrderByIsDefaultAscIdAsc(user)
+                .stream()
+                .map(c -> new AccountExport.CategoryEntry(c.getId(), c.getName(), c.getColor(), c.isDefault(),
+                        c.getCreatedAt()))
+                .toList();
+        List<AccountExport.RuleEntry> rules = ruleRepository.findByUserOrderByPriorityAsc(user).stream()
+                .map(r -> new AccountExport.RuleEntry(r.getId(), r.getKeyword(), r.getCategory().getId(),
+                        r.getCategory().getName(), r.getPriority()))
+                .toList();
+        List<AccountExport.ImportEntry> imports = importRepository.findByUserOrderByIdAsc(user).stream()
+                .map(i -> new AccountExport.ImportEntry(i.getId(), i.getFilename(), i.getBank().name(),
+                        i.getImportedAt()))
+                .toList();
+        List<AccountExport.TransactionEntry> transactions =
+                transactionRepository.findByUserOrderByTransactionDateAscIdAsc(user).stream()
+                        .map(t -> new AccountExport.TransactionEntry(t.getId(), t.getTransactionDate(),
+                                t.getMovementDate(), t.getDescription(), t.getAmount(), t.getBalanceAfter(),
+                                t.getCategory().getId(), t.getCategory().getName(),
+                                t.getStatementImport().getId(), t.getCreatedAt()))
+                        .toList();
+
+        return new AccountExport(
+                Instant.now(),
+                new AccountExport.Profile(user.getEmail(), user.getCreatedAt()),
+                categories, rules, imports, transactions);
     }
 
     // O bloqueio é verificado antes do BCrypt: enquanto dura, até a password

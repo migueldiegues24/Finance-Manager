@@ -16,6 +16,8 @@ import java.time.Duration;
 //    mudar a password e apagar a conta, para nenhum dos dois servir para
 //    adivinhar a password enquanto o outro está bloqueado.
 //
+//  - exportação: 10 por hora (lê todos os dados da conta de uma vez).
+//
 // Os endpoints de sessões não têm limite: são baratos e não verificam passwords.
 @Component
 public class AccountRateLimiter {
@@ -29,6 +31,8 @@ public class AccountRateLimiter {
     private final AttemptLimiter passwordByUser = new AttemptLimiter(
             Policy.withBackoff(5, FAILURE_WINDOW, BASE_LOCK, MAX_LOCK, BACKOFF_MEMORY),
             AuthRateLimiter.MAX_ENTRIES_PER_LIMIT);
+    private final AttemptLimiter exportByUser = new AttemptLimiter(
+            Policy.fixedWindow(10, Duration.ofHours(1)), AuthRateLimiter.MAX_ENTRIES_PER_LIMIT);
 
     public AccountRateLimiter(Clock clock) {
         this.clock = clock;
@@ -46,9 +50,16 @@ public class AccountRateLimiter {
         passwordByUser.reset(key(userId));
     }
 
+    // Conta o pedido se não estiver bloqueado.
+    public void exportRequested(long userId) {
+        throwIfBlocked(exportByUser.retryAfterSeconds(key(userId), clock.instant()));
+        exportByUser.recordAttempt(key(userId), clock.instant());
+    }
+
     // Só para os testes: o contexto Spring (e este bean) é partilhado entre eles.
     public void reset() {
         passwordByUser.clear();
+        exportByUser.clear();
     }
 
     private static String key(long userId) {

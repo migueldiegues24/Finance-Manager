@@ -16,6 +16,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     boolean existsByUserAndHash(User user, String hash);
 
+    List<Transaction> findByUserOrderByTransactionDateAscIdAsc(User user);
+
     List<Transaction> findByUserAndTransactionDateGreaterThanEqualAndTransactionDateLessThanOrderByTransactionDateDesc(
             User user, LocalDate start, LocalDate end);
 
