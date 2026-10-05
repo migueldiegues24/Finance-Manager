@@ -8,11 +8,7 @@ React + TypeScript (Vite)  →  REST API (Spring Boot, JWT)  →  PostgreSQL (Fl
                     CSV bank statement → parser → preview → confirm
 ```
  
-## Screenshots
- 
-<!-- Add screenshots here, e.g.: -->
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
-<!-- ![Import preview](docs/screenshots/import.png) -->
+
  
 ## Features
  
